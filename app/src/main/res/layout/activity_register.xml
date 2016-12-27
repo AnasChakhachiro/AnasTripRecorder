@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android = "http://schemas.android.com/apk/res/android"
+    android:layout_width  = "match_parent"
+    android:layout_height = "match_parent"
+    android:fillViewport  = "true"
+    android:id            = "@+id/scrollView"
+    android:background    = "#438692"
+    android:divider       = "#438692">
+
+    <LinearLayout
+        android:id            = "@+id/layout"
+        android:orientation   = "vertical"
+        android:layout_width  = "match_parent"
+        android:layout_height = "wrap_content"
+        android:background    = "#438692"
+        android:divider       = "#438692">
+
+
+    <ImageView
+        android:layout_width        = "wrap_content"
+        android:layout_height       = "wrap_content"
+        android:contentDescription  = "hello"
+        android:id                  = "@+id/logo"
+        android:layout_gravity      = "center_horizontal"
+        android:src                 = "@mipmap/tr"
+        android:layout_marginLeft   = "5dp"
+        android:layout_marginRight  = "5dp"
+        android:layout_marginTop    = "25dp"
+        android:layout_marginBottom = "@dimen/activity_vertical_margin"/>
+
+
+
+    <EditText
+        android:layout_width       ="match_parent"
+        android:layout_height      ="wrap_content"
+        android:layout_gravity     ="fill_horizontal"
+        android:inputType          ="textEmailAddress"
+        android:id                 ="@+id/etAddedName"
+        android:background         ="@drawable/et_appearance"
+        android:textColor          ="#00434F"
+        android:textStyle          ="bold"
+        android:layout_marginEnd   ="5dp"
+        android:layout_marginStart ="5dp"
+        android:layout_marginLeft  ="5dp"
+        android:layout_marginRight ="5dp"
+        android:padding            ="4dp"
+        android:hint               ="Name"
+        android:textColorHint      ="@android:color/tertiary_text_dark"
+        />
+
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="15dp" />
+
+    <EditText
+        android:layout_width       = "match_parent"
+        android:layout_height      = "wrap_content"
+        android:inputType          = "textEmailAddress"
+        android:id                 = "@+id/etAddedEmail"
+        android:background         = "@drawable/et_appearance"
+        android:textColor          = "#00434F"
+        android:textStyle          = "bold"
+        android:layout_marginStart = "5dp"
+        android:layout_marginEnd   = "5dp"
+        android:layout_marginLeft  = "5dp"
+        android:layout_marginRight = "5dp"
+        android:padding            = "4dp"
+
+        android:hint="Email"
+        android:textColorHint="@android:color/tertiary_text_dark"
+        />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="15dp" />
+
+    <EditText
+        android:layout_width      ="match_parent"
+        android:layout_height     ="wrap_content"
+        android:layout_gravity    ="fill_horizontal"
+        android:inputType         ="textEmailAddress"
+        android:id                ="@+id/etRecoveryEmail"
+        android:layout_marginLeft ="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginEnd  ="5dp"
+        android:layout_marginStart="5dp"
+        android:background        ="@drawable/et_appearance"
+        android:textColor         ="#00434F"
+        android:textStyle         ="bold"
+        android:hint              ="Recovery Email"
+        android:textColorHint     ="@android:color/tertiary_text_dark"
+        android:padding           ="4dp"
+        />
+
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="15dp" />
+
+
+    <TextView
+        android:layout_width        = "match_parent"
+        android:layout_height       = "wrap_content"
+        android:id                  = "@+id/tvPasswordConditions"
+        android:text                = "Password Conditions"
+        android:clickable           = "true"
+        android:textColor           = "@android:color/background_light"
+        android:textStyle           = "bold"
+        android:layout_marginLeft   ="4dp"
+        android:textSize            = "16sp"
+        android:layout_marginBottom ="5dp"
+        />
+
+    <EditText
+        android:layout_width       = "match_parent"
+        android:layout_height      = "wrap_content"
+        android:inputType          = "textPassword"
+        android:padding            = "4dp"
+        android:id                 = "@+id/etAddedPassword"
+        android:layout_marginLeft  = "5dp"
+        android:layout_marginRight = "5dp"
+        android:background         = "@drawable/et_appearance"
+        android:textColor          = "#00434F"
+        android:hint               = "Password"
+        android:textColorHint      = "@android:color/tertiary_text_dark"
+         />
+
+        <Space
+            android:layout_width  = "match_parent"
+            android:layout_height = "15dp" />
+
+    <EditText
+        android:layout_width      ="match_parent"
+        android:layout_height     ="wrap_content"
+        android:inputType         ="textPassword"
+        android:padding           ="4dp"
+        android:id                ="@+id/etConfirmedPassword"
+        android:layout_marginLeft ="5dp"
+        android:layout_marginRight="5dp"
+        android:background        ="@drawable/et_appearance"
+        android:textColor         ="#00434F"
+        android:textStyle         ="bold"
+        android:hint              ="Password confirmation"
+        android:textColorHint     ="@android:color/tertiary_text_dark"
+        />
+
+
+        <Space
+            android:layout_width  = "match_parent"
+            android:layout_height = "15dp" />
+
+        <Button
+            android:layout_width       = "match_parent"
+            android:layout_height      = "wrap_content"
+            android:text               = "Register"
+            android:enabled            = "false"
+            android:layout_gravity     = "center|end"
+            android:id                 = "@+id/bRegisterOrUpdate"
+            android:layout_marginLeft  = "5dp"
+            android:layout_marginRight = "5dp"/>
+
+        <Space
+            android:layout_width  = "match_parent"
+            android:layout_height = "15dp" />
+
+    </LinearLayout>
+</ScrollView>

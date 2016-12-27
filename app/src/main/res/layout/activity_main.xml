@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id            = "@+id/activity_main"
+    android:orientation   = "vertical"
+    android:showDividers  = "none"
+    android:background    = "#3C3F41"
+    android:divider       = "#3C3F41"
+    android:layout_width  = "match_parent"
+    android:layout_height = "match_parent"
+    android:paddingBottom = "2dp"
+    android:paddingLeft   = "2dp"
+    android:paddingRight  = "2dp"
+    android:paddingTop    = "2dp"
+    tools:context         = "com.example.anas.anastriprecorder.MainActivity"
+    >
+
+
+    <RelativeLayout
+        android:layout_width        = "fill_parent"
+        android:layout_height       = "0dp"
+        android:layout_weight       = "0.7"
+        android:background          = "@drawable/spinner_appearance"
+        android:layout_marginBottom = "4dp"
+        >
+
+    <fragment
+        android:name          = "com.google.android.gms.maps.MapFragment"
+        android:layout_width  = "match_parent"
+        android:layout_height = "match_parent"
+        android:id            = "@+id/mapFragment"
+        />
+
+
+        <Button
+            android:layout_width             ="wrap_content"
+            android:layout_height            ="wrap_content"
+            android:text                     ="►"
+            android:textStyle                ="bold"
+            android:textSize                 ="24sp"
+            android:id                       ="@+id/bRecordOrPause"
+            android:background               ="@drawable/play_button_square"
+            android:layout_alignParentBottom ="true"
+            android:minHeight                ="40dp"
+            android:minWidth                 ="40dp"/>
+
+        <Button
+            android:layout_width             = "wrap_content"
+            android:layout_height            = "wrap_content"
+            android:text                     = "■"
+            android:textStyle                = "bold"
+            android:textSize                 = "24sp"
+            android:id                       = "@+id/bStop"
+            android:background               = "@drawable/stop_button_square"
+            android:layout_alignParentBottom = "true"
+            android:layout_toRightOf         = "@id/bRecordOrPause"
+            android:minHeight                = "40dp"
+            android:minWidth                 = "40dp"
+            android:layout_marginLeft        = "4dp"
+            />
+    </RelativeLayout>
+
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.08"
+        android:background= "@drawable/spinner_appearance"
+        android:paddingBottom="2dp"
+        android:paddingTop="2dp"
+        android:minHeight="0dp"
+        >
+    <Spinner
+        android:id            ="@+id/mapStyleSpinner"
+        android:layout_width  ="fill_parent"
+        android:layout_height ="match_parent"
+        android:textSize      ="16sp"
+        android:background    ="@null"
+        android:minHeight     ="0dp"
+        />
+    <TextView
+        android:layout_width             = "wrap_content"
+        android:layout_height            = "match_parent"
+        android:layout_alignParentBottom = "true"
+        android:layout_alignParentRight  = "true"
+        android:text                     = " ▼   "
+        android:textColor                = "#DEDEDE"
+        android:textAlignment            = "center"
+        android:gravity                  = "center"
+        android:textSize                 = "24sp"
+        android:minHeight="0dp"
+         />
+</RelativeLayout>
+
+
+
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation         = "horizontal"
+        android:showDividers        = "none"
+        android:background    = "#3C3F41"
+        android:divider       = "#3C3F41"
+        android:layout_width        = "match_parent"
+        android:layout_height       = "0dp"
+        android:layout_weight       = "0.10"
+        tools:context               = "com.example.anas.anastriprecorder.MainActivity"
+        android:layout_marginRight  = "2dp"
+        android:layout_marginLeft   = "2dp"
+        >
+
+
+        <Button
+            android:textSize             = "18sp"
+            android:layout_width         = "0dp"
+            android:layout_weight        = "0.5"
+            android:layout_height        = "wrap_content"
+            android:id                   = "@+id/bAddTrip"
+            android:text                 = "Add trip"
+            android:background           = "@android:color/background_light"
+            android:textColor            = "@android:color/black"
+            android:textStyle            = "bold"
+            android:layout_marginRight   = "4dp"
+            android:layout_marginBottom  = "4dp"
+            android:layout_marginTop     = "4dp"
+            android:minHeight="15dp"
+        />
+
+        <Button
+            android:textSize            = "18sp"
+            android:layout_width        = "0dp"
+            android:layout_weight       = "0.5"
+            android:layout_height       = "wrap_content"
+            android:id                  = "@+id/bDeleteTrip"
+            android:text                = "Delete trip"
+            android:background           = "@android:color/background_light"
+            android:textColor           = "@android:color/black"
+            android:textStyle           = "bold"
+            android:layout_marginBottom = "4dp"
+            android:layout_marginTop    = "4dp"
+            android:layout_marginLeft   = "4dp"
+            android:minHeight="15dp"
+            />
+
+    </LinearLayout>
+
+
+
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation         = "horizontal"
+        android:showDividers        = "none"
+        android:layout_width        = "match_parent"
+        android:layout_height       = "0dp"
+        android:layout_weight       = "0.10"
+        tools:context               = "com.example.anas.anastriprecorder.MainActivity"
+        android:layout_marginRight  = "2dp"
+        android:layout_marginLeft   = "2dp"
+        >
+        <Button
+            android:textSize            = "18sp"
+            android:layout_width        = "0dp"
+            android:layout_weight       = "0.5"
+            android:layout_height       = "wrap_content"
+            android:id                  = "@+id/bGetTripReports"
+            android:text                = "Get trips report"
+            android:background           = "@android:color/background_light"
+            android:textColor           = "@android:color/black"
+            android:textStyle           = "bold"
+            android:layout_marginRight  = "4dp"
+            android:layout_marginBottom = "4dp"
+            android:layout_marginTop    = "4dp"
+            android:minHeight="15dp"
+            />
+
+        <Button
+            android:textSize            = "18sp"
+            android:layout_width        = "0dp"
+            android:layout_weight       = "0.5"
+            android:layout_height       = "wrap_content"
+            android:id                  = "@+id/bUpdateUser"
+            android:text                = "Update account"
+            android:background           = "@android:color/background_light"
+            android:textColor           = "@android:color/black"
+            android:textStyle           = "bold"
+            android:layout_marginBottom = "4dp"
+            android:layout_marginTop    = "4dp"
+            android:layout_marginLeft   = "4dp"
+            android:minHeight="15dp"
+            />
+    </LinearLayout>
+
+    <Button
+        android:layout_width        = "match_parent"
+        android:layout_height       = "wrap_content"
+        android:id                  = "@+id/bLogOut"
+        android:text                = "Log out"
+        android:background           = "@android:color/background_light"
+        android:textColor           = "@android:color/black"
+        android:textStyle           = "bold"
+        android:onClick             = "logout"
+        android:textSize            = "18sp"
+        android:layout_marginRight  = "2dp"
+        android:layout_marginBottom = "4dp"
+        android:layout_marginTop    = "4dp"
+        android:layout_marginLeft   = "2dp"
+        android:minHeight="15dp"/>
+
+</LinearLayout>
+

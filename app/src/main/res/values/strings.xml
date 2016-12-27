@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">AnasTripRecorder</string>
+
+    <string-array name="mapStyleOptions">
+        <item>Choose map style </item>
+        <item>NORMAL           </item>
+        <item>SATELLITE        </item>
+        <item>TERRAIN          </item>
+        <item>HYBRID           </item>
+    </string-array>
+
+    <string name="str_atv_places">Enter Place Here</string>
+
+</resources>

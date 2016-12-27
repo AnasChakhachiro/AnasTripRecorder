@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "102384725058",
+    "firebase_url": "https://iron-radio-148722.firebaseio.com",
+    "project_id": "iron-radio-148722",
+    "storage_bucket": "iron-radio-148722.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:102384725058:android:e89b64a6069bff68",
+        "android_client_info": {
+          "package_name": "com.example.anas.anastriprecorder"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "102384725058-p658ch6jcggjpjinrb7falfuipmsr179.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.anas.anastriprecorder",
+            "certificate_hash": "C17EC98C11BDBFDC7BC59F837CD8E1DF1C61A927"
+          }
+        },
+        {
+          "client_id": "102384725058-r8bnet1iqnde9ckl632i0arprdg802rp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKv_gmZ-wf-69_13HJkP51_7J3pj6xIew"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "102384725058-r8bnet1iqnde9ckl632i0arprdg802rp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background    = "#3C3F41"
+    android:divider       = "#3C3F41"
+    android:orientation="horizontal"
+    android:paddingBottom="4dp"
+    android:paddingLeft="4dp"
+    android:paddingRight="4dp"
+    android:paddingTop="4dp"
+    android:showDividers="none"
+    android:weightSum="1"
+    tools:context="com.example.anas.anastriprecorder.MainActivity">
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp"
+        android:layout_weight="0.35"
+        android:baselineAligned="false"
+        android:orientation="vertical"
+        android:showDividers="none"
+        android:weightSum="1">
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.11"
+            android:background="@drawable/spinner_appearance"
+            android:paddingBottom="2dp"
+            android:paddingTop="2dp"
+
+            >
+
+            <Spinner
+                android:id="@+id/mapStyleSpinner"
+                android:layout_width="fill_parent"
+                android:layout_height="match_parent"
+                android:background="@null"
+                android:textSize="16sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentRight="true"
+                android:text=" ▼   "
+                android:textAlignment="center"
+                android:textColor="#DEDEDE"
+                android:textSize="24sp" />
+        </RelativeLayout>
+
+
+        <Button
+            android:id="@+id/bAddTrip"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="4dp"
+            android:layout_weight="0.11"
+            android:background="#BEBEBE"
+            android:text="Add trip"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/bDeleteTrip"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="4dp"
+            android:layout_weight="0.11"
+            android:background="#BEBEBE"
+            android:text="Delete trip"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/bGetTripReports"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="4dp"
+            android:layout_weight="0.11"
+            android:background="#BEBEBE"
+            android:text="Get trips report"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/bUpdateUser"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="4dp"
+            android:layout_weight="0.11"
+            android:background="#BEBEBE"
+            android:text="Update account"
+            android:textStyle="bold" />
+
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.1" />
+
+
+        <LinearLayout
+            android:id="@+id/linearLayout3"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:layout_marginTop="8dp"
+            android:layout_weight="0.15"
+            android:orientation="horizontal"
+            android:showDividers="none"
+            android:weightSum="1">
+
+
+            <Button
+                android:id="@+id/bRecordOrPause"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.35"
+                android:background="@drawable/play_button"
+                android:text="►"
+                android:textSize="36sp"
+                android:textStyle="bold" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.3" />
+
+            <Button
+                android:id="@+id/bStop"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.35"
+                android:background="@drawable/stop_button"
+                android:text="■"
+                android:textSize="36sp" />
+        </LinearLayout>
+
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.1" />
+
+
+        <Button
+            android:id="@+id/bLogOut"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_gravity="bottom"
+            android:layout_weight="0.10"
+            android:background="#BEBEBE"
+            android:onClick="logout"
+            android:text="Log out"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/linearLayout2"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp"
+        android:layout_weight="0.65"
+        android:orientation="vertical"
+        android:showDividers="none"
+        android:weightSum="1">
+
+        <fragment
+            android:id="@+id/mapFragment"
+            android:name="com.google.android.gms.maps.MapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </LinearLayout>
+
+</LinearLayout>
