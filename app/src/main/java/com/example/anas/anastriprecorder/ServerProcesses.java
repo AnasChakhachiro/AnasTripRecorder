@@ -35,14 +35,25 @@ class ServerProcesses {
     private static final int CONN_TIME_OUT = 15000;
     static String ID;
     private Context context;
-    static LocalStorage localStorage = new LocalStorage();
-    static final String CONTENT_TYPE = "application/x-www-form-urlencoded; charset=UTF-8";
+    static LocalStorage localStorage ;
+    private static final String CONTENT_TYPE = "application/x-www-form-urlencoded; charset=UTF-8";
 
      Map<String, String> connectionStatusMap;
      {
         connectionStatusMap = new HashMap<>();
         setConnectionStatusMapToDefaultValues();
      }
+
+
+    ServerProcesses(Context mContext) {
+        try {
+            cryptography = new Cryptography();
+            this.context = mContext;
+            localStorage = new LocalStorage(context);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 
     // connectionStatus map defines whether the php files and the server are reachable and internet is available
@@ -55,14 +66,7 @@ class ServerProcesses {
             connectionStatusMap.put(phpFileName.substring(0,phpFileName.length()-4) + " Response", "0");
         }
     }
-    ServerProcesses(Context mContext) {
-        try {
-            cryptography = new Cryptography();
-            this.context = mContext;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+
 
 
     private static boolean isNetworkAvailable (NetworkInfo netInfo) {
@@ -120,7 +124,7 @@ class ServerProcesses {
             public void run() {
                 connectionStatusMap.clear();
                 setConnectionStatusMapToDefaultValues();
-                connectionStatus(MainActivity.getContext());
+                connectionStatus(context);
             }
         });
         connectionStatusThread.start();
@@ -334,6 +338,7 @@ class ServerProcesses {
                     Register.showErrorMsg("Error","Error while exchanging data with the server");
 
             else if( purpose .equals("Register")){
+                Login.prposeOfRegisterClass=Login.Register;
                 Register.context.startActivity(new Intent(Register.context, Login.class));
                 Handler handler = new Handler();
                 handler.postDelayed(new Runnable() {
@@ -345,10 +350,11 @@ class ServerProcesses {
                 }, 500);
 
             }else if(purpose .equals("Update")){
+                Login.prposeOfRegisterClass=Login.Update;
                 try {
                     Register.reset();// We are in Register Activity
-                    Register.customerLocalStore.clearUserData();
-                    Register.customerLocalStore.markAsLoggedIn(false);
+                    Register.localStorage.clearUserData();
+                    Register.localStorage.markAsLoggedIn(false);
                     Register.context.startActivity(new Intent(Register.context, Login.class));
                 }catch(NullPointerException N){
                     N.printStackTrace(); // we are in change password activity

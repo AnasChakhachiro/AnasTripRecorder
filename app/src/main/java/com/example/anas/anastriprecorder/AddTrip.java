@@ -455,18 +455,18 @@ public class AddTrip extends FragmentActivity implements TimePickerDialog.OnTime
     }
 
 
-    private void askToTurnGpsOnIfItIsOff() {
+    void askToTurnGpsOnIfItIsOff() {
         final LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            showGpsOffAlertMessage();
+            showGpsOffAlertMessage(this);
         }
     }
 
     /**used to show dialog asking user to notify user about missing GPS*/
-    private void showGpsOffAlertMessage() {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("Your GPS seems to be disabled, do you want to enable it?")
+    private void showGpsOffAlertMessage(Context context) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setMessage("This service uses GPS. Do you want to enable it?")
                 .setCancelable(false)
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(@SuppressWarnings("unused") final DialogInterface dialog,
@@ -672,13 +672,17 @@ public class AddTrip extends FragmentActivity implements TimePickerDialog.OnTime
                 @Override
                 public void onMapLongClick(LatLng position) {
                     try {
-                        tmpMapStrtAddress = mapsOperations.coordinates2locationString(getBaseContext(),
-                                position.latitude, position.longitude, 1).get(0);
-                        String snippet = tmpMapStrtAddress.getAddressLine(0) + " ,"
-                                + ((tmpMapStrtAddress.getLocality() == null) ? "" : (tmpMapStrtAddress.getLocality() + " ,"))
-                                + tmpMapStrtAddress.getCountryName();
-                        mapsOperations.goToLocation(mGoogleMapStrt, position, DEFAULT_ZOOM, MapsOperations.markerStrt, tag, snippet);
-                        Toast.makeText(getBaseContext(), position.latitude + " : " + position.longitude, Toast.LENGTH_SHORT).show();
+                        if (networkIsAvailable(getBaseContext())) {
+                            tmpMapStrtAddress = mapsOperations.coordinates2locationString(getBaseContext(),
+                                    position.latitude, position.longitude, 1).get(0);
+                            String snippet = tmpMapStrtAddress.getAddressLine(0) + " ,"
+                                    + ((tmpMapStrtAddress.getLocality() == null) ? "" : (tmpMapStrtAddress.getLocality() + " ,"))
+                                    + tmpMapStrtAddress.getCountryName();
+                            mapsOperations.goToLocation(mGoogleMapStrt, position, DEFAULT_ZOOM, MapsOperations.markerStrt, tag, snippet);
+                            Toast.makeText(getBaseContext(), position.latitude + " : " + position.longitude, Toast.LENGTH_SHORT).show();
+                        }else{
+                            showAddingTripMessage("No internet connection!", "This application needs internet connection to get locations details", 1);
+                        }
                     } catch (Exception e) {
                         Toast.makeText(getBaseContext(), "cannot find valid address here", Toast.LENGTH_SHORT).show();
                         e.printStackTrace();
@@ -690,14 +694,18 @@ public class AddTrip extends FragmentActivity implements TimePickerDialog.OnTime
                 @Override
                 public void onMapLongClick(LatLng position) {
                     try {
-                        tmpMapStopAddress = mapsOperations.coordinates2locationString(getBaseContext(),
-                                position.latitude, position.longitude, 1).get(0);
-                        String snippet = tmpMapStopAddress.getAddressLine(0) + " ,"
-                                + ((tmpMapStopAddress.getLocality() == null) ? "" : (tmpMapStopAddress.getLocality() + " ,"))
-                                + tmpMapStopAddress.getCountryName();
-                        mapsOperations.goToLocation(mGoogleMapStop, position, DEFAULT_ZOOM, MapsOperations.markerStop, tag, snippet);
-                        Toast.makeText(getBaseContext(), position.latitude + " : " + position.longitude, Toast.LENGTH_SHORT).show();
-                    } catch (Exception e) {
+                        if (networkIsAvailable(getBaseContext())) {
+                            tmpMapStopAddress = mapsOperations.coordinates2locationString(getBaseContext(),
+                                    position.latitude, position.longitude, 1).get(0);
+                            String snippet = tmpMapStopAddress.getAddressLine(0) + " ,"
+                                    + ((tmpMapStopAddress.getLocality() == null) ? "" : (tmpMapStopAddress.getLocality() + " ,"))
+                                    + tmpMapStopAddress.getCountryName();
+                            mapsOperations.goToLocation(mGoogleMapStop, position, DEFAULT_ZOOM, MapsOperations.markerStop, tag, snippet);
+                            Toast.makeText(getBaseContext(), position.latitude + " : " + position.longitude, Toast.LENGTH_SHORT).show();
+                        }else{
+                            showAddingTripMessage("No internet connection!", "This application needs internet connection to get locations details", 1);
+                        }
+                    }catch (Exception e) {
                         Toast.makeText(getBaseContext(), "cannot find valid address here", Toast.LENGTH_SHORT).show();
                         e.printStackTrace();
                     }

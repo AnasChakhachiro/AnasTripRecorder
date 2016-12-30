@@ -17,7 +17,7 @@ import java.util.List;
 
 class MapsOperations  {
 
-    static Marker markerStrt, markerStop;
+    static Marker markerStrt, markerStop , markerMain;
 
 
     List<LatLng> locationString2Coordinates(Context context, String locationName, int resultsNumber){
@@ -59,8 +59,15 @@ class MapsOperations  {
                                           .position(latLng)
                                           .title(markerTitle)
                                           .snippet(markerSnippet));
+        }else if(marker == MapsOperations.markerMain) {
+            if (MapsOperations.markerMain != null)
+                MapsOperations.markerMain.remove();
+            MapsOperations.markerMain = gm.addMarker(new MarkerOptions()
+                    .position(latLng)
+                    .title(markerTitle)
+                    .snippet(markerSnippet));
         }
-        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng,zoom);
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, zoom);
         gm.moveCamera(cameraUpdate);
     }
 

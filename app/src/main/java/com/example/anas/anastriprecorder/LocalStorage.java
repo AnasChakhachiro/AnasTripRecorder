@@ -1,6 +1,7 @@
 
 package com.example.anas.anastriprecorder;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 
 import java.util.Map;
@@ -57,9 +58,9 @@ class LocalStorage {
     };
 
 
-    LocalStorage(){
+    LocalStorage(Context context){
         try {
-            userLocalDB = MainActivity.getContext().getSharedPreferences(SP_Name,0);
+            userLocalDB = context.getSharedPreferences(SP_Name,0);
         }catch (NullPointerException N){
             N.printStackTrace();
         }

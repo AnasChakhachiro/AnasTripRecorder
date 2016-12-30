@@ -21,7 +21,7 @@ public class Register extends Activity implements View.OnClickListener {
     static Button bRegister ;
     static EditText etAddedPassword, etConfirmedPassword, etAddedEmail, etAddedName, etRecoveryEmail;
     static TextView tvPasswordConditions;
-    static LocalStorage customerLocalStore = new LocalStorage();
+    static LocalStorage localStorage;
     static final String[] specialChars = {"!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "_", "+", "=", "-", "?", "|", ">", "<", "€", "{", "}", "[", "]", "?"};
     static final String[] numbers = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"};
     static Context context;
@@ -32,6 +32,7 @@ public class Register extends Activity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
         context = Register.this;
         setContentView(R.layout.activity_register);
+        localStorage = new LocalStorage(this);
         bRegister = (Button) findViewById(R.id.bRegisterOrUpdate);
         etAddedPassword = (EditText) findViewById(R.id.etAddedPassword);
         etAddedEmail = (EditText) findViewById(R.id.etAddedEmail);
@@ -287,11 +288,11 @@ public class Register extends Activity implements View.OnClickListener {
             @Override
             public void done(User returnedUser) {
                 if ((returnedUser != null) &&
-                        (!returnedUser.getID().equals(customerLocalStore.userLocalDB.getString("ID", "")))) {
+                        (!returnedUser.getID().equals(localStorage.userLocalDB.getString("ID", "")))) {
                     //because trying to insert new user in the table that already contains the email will fail and return null
                     showErrorMsg("Error", "Update failed .. The new email is already registered");
                 } else {
-                    addedUser.setID(new LocalStorage().getLoggedInUser().getID());
+                    addedUser.setID(new LocalStorage(getBaseContext()).getLoggedInUser().getID());
                     ServerProcesses.ID = addedUser.getID();
                     serverProcesses.storeUserDataInBackground("Update", user, new AfterUserAsyncTaskDone() {
                         @Override
@@ -305,13 +306,11 @@ public class Register extends Activity implements View.OnClickListener {
                     //-----------------------------------------------------------------------------------------------
 
     public static void reset() {
-
             etAddedName.setText("");
             etAddedEmail.setText("");
             etAddedPassword.setText("");
             etConfirmedPassword.setText("");
             etRecoveryEmail.setText("");
-
     }
                 //-----------------------------------------------------------------------------------------------
 

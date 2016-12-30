@@ -4,7 +4,6 @@ package com.example.anas.anastriprecorder;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -20,21 +19,37 @@ import android.widget.TextView;
 
 public class Login extends Activity implements View.OnClickListener{
 
+    final static String Register="Register";
+    final static String Update="Update";
+    static String prposeOfRegisterClass="";
+    static Context context;
     TextView     tvRegister  , tvForgotPassword   ;
     Button       bLogin      , bExit              ;
     EditText     etPassword  , etEmail            ;
-    LocalStorage localStorage = new LocalStorage();
+    LocalStorage localStorage;
     static final String[] specialChars = { "!", "@", "#", "$", "%", "^", "&", "*", "(", ")","_","+"
                                           ,"=", "-", "?", "|", ">", "<", "{", "}", "[", "]", "?" };
     static final String[] numbers      = {"1", "2" , "3" , "4" , "5" , "6" , "7" , "8" , "9" ,"0"};
     static       String   email = "";
-    static       Context  context   ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        context = this;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
+        context = this;
+
+        /*Messages to be shown on Login screen if it is opened after registration or user account update
+        String callerClass = Thread.currentThread().getStackTrace()[3].getClass().getSimpleName();
+        Log.e("caller class ", callerClass);
+        if(callerClass.equals(Register)){
+            showErrorMsg("User Registered"  , "An email of your registration "  +
+                    "data is sent to your recovery account");
+        }else if(callerClass.equals(Update)) {
+            showErrorMsg("Your session ended", "An email of your updated data is sent to your " +
+                    "recovery email. Please log in again using the new credentials");
+        }*/
+
+        localStorage = new LocalStorage(this);
         etEmail           = (EditText) findViewById (R.id.etEmail          );
         etPassword        = (EditText) findViewById (R.id.etPassword       );
         tvForgotPassword  = (TextView) findViewById (R.id.tvForgotPassword );
@@ -322,9 +337,8 @@ public class Login extends Activity implements View.OnClickListener{
     }
 
 
-
-    public static void showErrorMsg(String title,String msg){
-        AlertDialog.Builder dialogueBuilder = new AlertDialog.Builder(context);
+    public  static void showErrorMsg(String title,String msg){
+        AlertDialog.Builder dialogueBuilder = new AlertDialog.Builder(Login.context);
         dialogueBuilder.setTitle(title);
         dialogueBuilder.setMessage(msg);
         dialogueBuilder.setPositiveButton("OK",null);
