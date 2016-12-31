@@ -68,7 +68,7 @@ class MapsOperations  {
                     .snippet(markerSnippet));
         }
         CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, zoom);
-        gm.moveCamera(cameraUpdate);
+        gm.animateCamera(cameraUpdate);
     }
 
 

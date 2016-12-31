@@ -20,7 +20,6 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.text.Editable;
@@ -45,18 +44,12 @@ import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
-
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
-
 import org.json.JSONObject;
-
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.DecimalFormat;
@@ -68,7 +61,7 @@ import java.util.List;
 import java.util.Locale;
 
 
-public class AddTrip extends FragmentActivity implements TimePickerDialog.OnTimeSetListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class AddTrip extends FragmentActivity implements TimePickerDialog.OnTimeSetListener {
     private static final String BROWSER_KEY = "AIzaSyAIagLqArXwdqGQPL7miJK46IiKKAzPnm8";
     // layout variables
     Button bNext, bPrevious, bAddTrip;
@@ -85,8 +78,6 @@ public class AddTrip extends FragmentActivity implements TimePickerDialog.OnTime
 
     //Activity general variables
     static ProgressDialog pd;
-    GoogleApiClient mGoogleApiClient;
-
     //google auto-complete-related variables
     PlacesTask placesTask;
     placeParserTask placeParserTask;
@@ -144,9 +135,6 @@ public class AddTrip extends FragmentActivity implements TimePickerDialog.OnTime
         strtMapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.mapFragmentStrt);
         stopMapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.mapFragmentStop);
         hsv = (HorizontalScrollView) findViewById(R.id.addTripHorizontalScrollView);
-
-
-        mGoogleApiClient = createInstanceOfGoogleApiClientAt(mGoogleApiClient);
 
         setLayoutDimensions(); //Make the layout for start and stop parts fit the screen each
         setLatLongEditTextsInputTypeToSignedFloat();
@@ -443,17 +431,6 @@ public class AddTrip extends FragmentActivity implements TimePickerDialog.OnTime
         enableScrollingOnImageView(transparentStopImageView);
     }
 
-    private GoogleApiClient createInstanceOfGoogleApiClientAt(GoogleApiClient googleApiClient) {
-        if (googleApiClient == null) {
-            googleApiClient = new GoogleApiClient.Builder(this)
-                    .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
-                    .addApi(LocationServices.API)
-                    .build();
-        }
-        return googleApiClient;
-    }
-
 
     void askToTurnGpsOnIfItIsOff() {
         final LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -648,8 +625,7 @@ public class AddTrip extends FragmentActivity implements TimePickerDialog.OnTime
                         + ((tmpMapStopAddress.getLocality() == null) ? "" : (tmpMapStopAddress.getLocality() + " ,"))
                         + tmpMapStopAddress.getCountryName();
                 mapsOperations.goToLocation(mGoogleMapStop, new LatLng(latitude, longitude), DEFAULT_ZOOM, MapsOperations.markerStop, tag, snippet);
-            }
-            if (tag.equals(START_LOCATION)) {
+            } else if (tag.equals(START_LOCATION)) {
                 tmpMapStrtAddress = mapsOperations.coordinates2locationString(getBaseContext(), latitude, longitude, 1).get(0);
                 String snippet = tmpMapStrtAddress.getAddressLine(0) + " ,"
                         + ((tmpMapStrtAddress.getLocality() == null) ? "" : (tmpMapStrtAddress.getLocality() + " ,"))
@@ -797,7 +773,8 @@ public class AddTrip extends FragmentActivity implements TimePickerDialog.OnTime
 
     /** disable map in the AddTrip layout for long-clicking and hide myLocation button*/
     private void deactivateMap(GoogleMap mGoogleMap) {
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -896,18 +873,6 @@ public class AddTrip extends FragmentActivity implements TimePickerDialog.OnTime
     // called on "previous" clicked to move from stop to start part of the layout
     public void scrollHorizontallyToFarLeft(HorizontalScrollView hsv) {
         hsv.fullScroll(HorizontalScrollView.FOCUS_LEFT);
-    }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
     }
 
 //Time Date related functions ===============================================================================================

@@ -37,18 +37,6 @@ public class Login extends Activity implements View.OnClickListener{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
         context = this;
-
-        /*Messages to be shown on Login screen if it is opened after registration or user account update
-        String callerClass = Thread.currentThread().getStackTrace()[3].getClass().getSimpleName();
-        Log.e("caller class ", callerClass);
-        if(callerClass.equals(Register)){
-            showErrorMsg("User Registered"  , "An email of your registration "  +
-                    "data is sent to your recovery account");
-        }else if(callerClass.equals(Update)) {
-            showErrorMsg("Your session ended", "An email of your updated data is sent to your " +
-                    "recovery email. Please log in again using the new credentials");
-        }*/
-
         localStorage = new LocalStorage(this);
         etEmail           = (EditText) findViewById (R.id.etEmail          );
         etPassword        = (EditText) findViewById (R.id.etPassword       );
