@@ -32,9 +32,8 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
-
 import static com.example.anas.anastriprecorder.AddTripActivity.pd;
-
+/**This class manages all the processes between the application and the server*/
 class ServerProcesses {
     private static Cryptography cryptography;
     private static final String SERVER_ADDRESS = "http://triprecorder.000webhostapp.com/";
@@ -63,9 +62,9 @@ class ServerProcesses {
     }
 
 
-    // connectionStatus map defines whether the php files and the server are reachable and internet is available
+    /** ConnectionStatus map defines whether the php files and the server are reachable and internet is available*/
     private  void setConnectionStatusMapToDefaultValues(){
-        connectionStatusMap.put("Network Availability", "NO");
+        connectionStatusMap.put("Network Availability","NO");
         connectionStatusMap.put("ServerURLResponse", "0");
         for (ServerFiles.PhpFile phpFile : ServerFiles.PhpFile.values()) {
             String phpFileName = ServerFiles.getFile(phpFile);
@@ -74,12 +73,11 @@ class ServerProcesses {
     }
 
 
-
     private static boolean isNetworkAvailable (NetworkInfo netInfo) {
         return netInfo != null && netInfo.isConnected();
     }
 
-    // establishes http connection to URL and returns an object of that connection
+    /** Establishes http connection to URL and returns an object of that connection*/
     private static HttpURLConnection getHttpUrlConnection(String urlString) throws IOException {
         URL url = new URL(urlString);
         HttpURLConnection urlc = (HttpURLConnection) url.openConnection();
@@ -88,13 +86,14 @@ class ServerProcesses {
         return urlc;
     }
 
+    /**Checks if the url of the server is accessible*/
     private  void checkServerUrlReachability()throws IOException {
         HttpURLConnection urlc = getHttpUrlConnection(SERVER_ADDRESS);
         connectionStatusMap.remove("ServerURLResponse");
         connectionStatusMap.put("ServerURLResponse", String.valueOf(urlc.getResponseCode()));
     }
 
-    // checks if the php files on the server side are reachable
+    /**Checks if the php files on the server side are reachable*/
     private  void checkPhpFilesUrlsReachability()throws IOException {
         for (ServerFiles.PhpFile phpFile : ServerFiles.PhpFile.values()) {
             String phpFileName = ServerFiles.getFile(phpFile);
@@ -105,7 +104,7 @@ class ServerProcesses {
         }
     }
 
-    // returns a map whose values are the server response codes when trying to access server and php urls.
+    /**Returns a map whose values are the server response codes when trying to access server and php urls.*/
     private  Map<String,String> connectionStatus(Context context) {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
@@ -123,6 +122,8 @@ class ServerProcesses {
     }
 
 
+    /**Gets the status map elements which indicate which urls can ba reached then tries to establish
+       http connection to the specified URL and returns http object of that connection */
 
     private HttpURLConnection setHttpPostRequest(final URL url, Map<String, String> dataToSend){
         Thread connectionStatusThread = new Thread(new Runnable() {
@@ -170,7 +171,7 @@ class ServerProcesses {
         }
     }
 
-
+    // Posts data to the server and gets its response if available
     private JSONObject postAndGetJasonResponse(HttpURLConnection http){
         try {
             InputStream inputStream = http.getInputStream();
@@ -192,6 +193,7 @@ class ServerProcesses {
     }
    //==================================================================================================================================
 
+    /** Used for Login. sends email and pw and checks if there's user in DB with those credentials.*/
     void fetchUserDataInBackground(User user, AfterUserAsyncTaskDone callback){
         //    progressDialog.show();
         new FetchUserDataAsyncTask(user, callback).execute();
@@ -368,7 +370,7 @@ class ServerProcesses {
 
 //=================================================================================================================================
 
-    //used in log in to check if the credentials are correct
+    /**Used in log in to check if the credentials are correct*/
     void fetchUserDataByEmailOnlyInBackground(String email, AfterUserAsyncTaskDone callback){
         new FetchUserDataByEmailOnlyAsyncTask(email, callback).execute();
     }
@@ -554,7 +556,7 @@ class ServerProcesses {
             return null;
         }
 
-        //used to find direct distance between two locations (if driving distance is null by google)
+        /** Used to find direct distance between two locations (if driving distance is null by google)*/
         String findDistanceBetween(LatLng start, LatLng stop){
             float[] results = new float[1];
             Location.distanceBetween(start.latitude, start.longitude,
