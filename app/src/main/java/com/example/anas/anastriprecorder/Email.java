@@ -145,7 +145,7 @@ public class Email extends javax.mail.Authenticator{
 
     public static void sendEmailAfterRegistrationOrUpdate(User user) {
         {
-            Email mail = new Email("triprecordermailservice@gmail.com", "myAplication2016");
+            Email mail = new Email("myEmail@gmail.com", "myPassword");
             String updatedName = user.getName();
             String updatedEmail = user.getEmail();
             String nPW = user.getPassword();
