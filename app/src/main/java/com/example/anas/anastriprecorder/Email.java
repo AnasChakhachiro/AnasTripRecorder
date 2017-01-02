@@ -166,7 +166,7 @@ public class Email extends javax.mail.Authenticator{
                     "Thank you for using TripRecorder\n\n" +
 
                     "Service team\n" +
-                    "AnasForGettingLost GmbH");
+                    "Anas GmbH");
             mail.sendEmailInBackground();
         }
     }
