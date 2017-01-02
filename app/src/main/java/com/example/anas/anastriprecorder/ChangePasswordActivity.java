@@ -4,11 +4,8 @@ package com.example.anas.anastriprecorder;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -18,16 +15,15 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 
-public class ChangePassword extends Activity implements View.OnClickListener {
+public class ChangePasswordActivity extends Activity implements View.OnClickListener {
     static long timeWhenChangeButtonClicked;
     static long timeWhenCodeEmailSent;
-    static final int timeOutInMinutes = 3;
+    static final int timeOutInMinutes = 6;
     final int codeTimeOut =  (int)(long)(timeOutInMinutes * 60 *1000); //milli seconds
     private Button bChangeOldPassword;
-    static EditText etNewPassword, etNewConfirmedPassword, etCode, etAddedName1,etAddedEmail1 ,etRecoveryEmail1 ;
+    EditText etNewPassword, etNewConfirmedPassword, etCode, etAddedName1,etAddedEmail1 ,etRecoveryEmail1 ;
     static final String[] specialChars = {"!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "_", "+", "=", "-", "?", "|", ">", "<", "€", "{", "}", "[", "]", "?"};
     static final String[] numbers = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"};
-    static Context context;
     private User addedUser;
     static Cryptography mCrypt;
     private String   lastCode  ;
@@ -35,28 +31,21 @@ public class ChangePassword extends Activity implements View.OnClickListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
-        context = ChangePassword.this;
         setContentView(R.layout.activity_password);
         sendPW_RenewingCode();
         bChangeOldPassword = (Button) findViewById(R.id.bChangeOldPassword);
         Button bResendCode = (Button) findViewById(R.id.bResendCode);
         etNewPassword = (EditText) findViewById(R.id.etNewPassword);
         etCode = (EditText) findViewById(R.id.etCode);
-
-
         etAddedEmail1 = (EditText) findViewById(R.id.etAddedEmail1);
         etAddedName1 = (EditText) findViewById(R.id.etAddedName1);
         etRecoveryEmail1 = (EditText) findViewById(R.id.etRecoveryEmail1);
-
         etNewConfirmedPassword = (EditText) findViewById(R.id.etNewConfirmPassword);
         TextView tvPasswordConditions1 = (TextView) findViewById(R.id.tvPasswordConditions1);
-
         bChangeOldPassword.setOnClickListener(this);
         bResendCode.setOnClickListener(this);
         tvPasswordConditions1.setOnClickListener(this);
-
         etNewPassword.addTextChangedListener(new TextWatcher() {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -145,7 +134,7 @@ public class ChangePassword extends Activity implements View.OnClickListener {
                         etCode.getText().toString().substring(0,56).equals(lastCode.substring(0, 56))) {
                      addedUser = new User(addedName, addedEmail, newPassword);
                      addedUser.setRecoveryEmail(recoveryEmail);
-                     updateCustomer(addedUser, code);
+                     updateUser(addedUser, code);
                 }else{
 
                     Log.e("c1", isLegalPassword(newPassword) + "");
@@ -164,7 +153,7 @@ public class ChangePassword extends Activity implements View.OnClickListener {
                 timeWhenCodeEmailSent = System.currentTimeMillis();
                 break;
             case R.id.tvPasswordConditions1:
-                final AlertDialog alertDialog = new AlertDialog.Builder(ChangePassword.this).create();
+                final AlertDialog alertDialog = new AlertDialog.Builder(ChangePasswordActivity.this).create();
                 alertDialog.setTitle("Password Conditions");
                 alertDialog.setMessage("Password should contain at least:\n" +
                         ">> one number [0-9]\n" +
@@ -186,6 +175,24 @@ public class ChangePassword extends Activity implements View.OnClickListener {
     public void onBackPressed() {
         super.onBackPressed();
     }
+
+    @Override
+    protected void onStart() {
+        if (!getIntent().getStringExtra("Name").equals("")) {
+            etAddedName1.setText(getIntent().getStringExtra("Name"));
+            etAddedEmail1.setText(getIntent().getStringExtra("Email"));
+            etRecoveryEmail1.setText(getIntent().getStringExtra("RecoveryEmail"));
+            etAddedName1.setActivated(false);
+            etAddedEmail1.setActivated(false);
+            etRecoveryEmail1.setActivated(false);
+            etNewPassword.setText("");
+            etNewConfirmedPassword.setText("");
+        } else {
+            showErrorMsg("Connection Error", "Couldn't get data from BE. Please, check your internet connection");
+        }
+        super.onStart();
+    }
+
     //-------------------------------------------------------------------------------------------
 
     /*When a user forgets a password and wants to change it, he will receive a code in his recovery
@@ -193,20 +200,20 @@ public class ChangePassword extends Activity implements View.OnClickListener {
     * define new password. This is done for protection.
     * The code has timeout. If it is exceeded, a new code will be needed to be sent .
     */
-    final  ServerProcesses serverProcesses = new ServerProcesses(getBaseContext());
+    final  ServerProcesses serverProcesses = new ServerProcesses(this);
     public  void sendPW_RenewingCode(){
-        serverProcesses.fetchUserDataByEmailOnlyInBackground(Login.email, new AfterUserAsyncTaskDone() {
+        serverProcesses.fetchUserDataByEmailOnlyInBackground(LoginActivity.email, new AfterUserAsyncTaskDone() {
 
             @Override
-            public void done(User unknownCustomer) {
+            public void done(User user) {
                 try {
                     Cryptography mCrypt = new Cryptography();
                     String iv = mCrypt.byteArrayToHexString(mCrypt.generateIV());
                     Email mail = new Email("triprecordermailservice@gmail.com", "myAplication2016");
-                    String returnedName = unknownCustomer.getName();
-                    String returnedPassword = unknownCustomer.getPassword();
+                    String returnedName = user.getName();
+                    String returnedPassword = user.getPassword();
                     String encryptedReturnedPassword = mCrypt.encrypt(returnedPassword);
-                    String returnedRecoveryEmail = unknownCustomer.getRecoveryEmail();
+                    String returnedRecoveryEmail = user.getRecoveryEmail();
                     mail.setTo(new String[]{returnedRecoveryEmail});
                     mail.setSubject("triprecorder Account Password");
                     mail.setFrom("triprecorder");
@@ -219,11 +226,11 @@ public class ChangePassword extends Activity implements View.OnClickListener {
                             "Thank you for using Trip Recorder\n\nService team\nTrip Recorder");
                     mail.sendEmailInBackground();
 
-                    ChangePassword.timeWhenCodeEmailSent = System.currentTimeMillis();
+                    ChangePasswordActivity.timeWhenCodeEmailSent = System.currentTimeMillis();
 
                     try {
                         showErrorMsg("Password Recovery", "A security code is sent to your password recovery email. The code is useable only for "
-                                + ChangePassword.timeOutInMinutes + " minutes .. then you will have to resend the code");
+                                + ChangePasswordActivity.timeOutInMinutes + " minutes .. then you will have to resend the code");
 
                     } catch (Exception N) {
                         N.printStackTrace();//in case no value is assigned to Register.context though
@@ -248,23 +255,22 @@ public class ChangePassword extends Activity implements View.OnClickListener {
     }
 
     //------------------------------------------------------------------------------------------
-    private void updateCustomer(final User customer, final String code1) {
+    private void updateUser(final User user, final String code) {
         final ServerProcesses serverProcesses = new ServerProcesses(this);
-        serverProcesses.fetchUserDataByEmailOnlyInBackground(customer.getEmail(), new AfterUserAsyncTaskDone() {
+        serverProcesses.fetchUserDataByEmailOnlyInBackground(user.getEmail(), new AfterUserAsyncTaskDone() {
             @Override
-            public void done(User returnedCustomer) {
+            public void done(User returnedUser) {
                 try {
                     mCrypt = new Cryptography();
-                    String ivHex = code1.substring(0, 32);
-                    String encryptedOldPW = code1.substring(32, code1.length());
+                    String ivHex = code.substring(0, 32);
+                    String encryptedOldPW = code.substring(32, code.length());
                     mCrypt.setIV(ivHex);
-                    if (returnedCustomer.getPassword().equals(mCrypt.decrypt(encryptedOldPW))) {
-                        addedUser.setID(returnedCustomer.getID());
+                    if (returnedUser.getPassword().equals(mCrypt.decrypt(encryptedOldPW))) {
+                        addedUser.setID(returnedUser.getID());
                         ServerProcesses.ID = addedUser.getID();
-                        serverProcesses.storeUserDataInBackground("Update", customer, new AfterUserAsyncTaskDone() {
+                        serverProcesses.storeUserDataInBackground("Update", user, new AfterUserAsyncTaskDone() {
                             @Override
-                            public void done(User NoCustomer) {
-                            }
+                            public void done(User user) {}
                         });
                     } else {
                         showErrorMsg("Incorrect code", "The security code you entered in incorrect. Please correct it or get new code by clicking Resend Code button");
@@ -275,14 +281,6 @@ public class ChangePassword extends Activity implements View.OnClickListener {
                 }
             }
         });
-    }
-
-    //-----------------------------------------------------------------------------------------------
-
-    public static void reset() {
-        etCode.setText("");
-        etNewPassword.setText("");
-        etNewConfirmedPassword.setText("");
     }
 
     //-----------------------------------------------------------------------------------------------
@@ -304,14 +302,6 @@ public class ChangePassword extends Activity implements View.OnClickListener {
             }
         }
         return (hasNumber);
-    }
-
-
-    public class MyContextWrapper extends ContextWrapper {
-
-        public MyContextWrapper(Context base) {
-            super(base);
-        }
     }
 }
 

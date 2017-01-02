@@ -14,7 +14,9 @@
         android:layout_width  = "match_parent"
         android:layout_height = "wrap_content"
         android:background    = "#438692"
-        android:divider       = "#438692">
+        android:divider       = "#438692"
+        android:focusable     ="true"
+        android:focusableInTouchMode="true">
 
 
     <ImageView
@@ -47,6 +49,8 @@
         android:padding            ="4dp"
         android:hint               ="Name"
         android:textColorHint      ="@android:color/tertiary_text_dark"
+        android:nextFocusUp        ="@id/etAddedName"
+        android:nextFocusLeft      ="@id/etAddedName"
         />
 
 
@@ -124,6 +128,7 @@
         android:background         = "@drawable/et_appearance"
         android:textColor          = "#00434F"
         android:hint               = "Password"
+        android:enabled            = "true"
         android:textColorHint      = "@android:color/tertiary_text_dark"
          />
 

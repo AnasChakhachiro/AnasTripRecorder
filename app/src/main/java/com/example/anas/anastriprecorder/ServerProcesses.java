@@ -1,15 +1,17 @@
-
 package com.example.anas.anastriprecorder;
 
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
+import com.google.android.gms.maps.model.LatLng;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 import java.io.BufferedReader;
@@ -28,6 +30,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import static com.example.anas.anastriprecorder.AddTripActivity.pd;
 
 class ServerProcesses {
     private static Cryptography cryptography;
@@ -37,6 +43,7 @@ class ServerProcesses {
     private Context context;
     static LocalStorage localStorage ;
     private static final String CONTENT_TYPE = "application/x-www-form-urlencoded; charset=UTF-8";
+    private AsyncTask addTripAsyncTask;
 
      Map<String, String> connectionStatusMap;
      {
@@ -62,7 +69,6 @@ class ServerProcesses {
         connectionStatusMap.put("ServerURLResponse", "0");
         for (ServerFiles.PhpFile phpFile : ServerFiles.PhpFile.values()) {
             String phpFileName = ServerFiles.getFile(phpFile);
-            Log.e("test", phpFileName.substring(0,phpFileName.length()-4) + " Response");
             connectionStatusMap.put(phpFileName.substring(0,phpFileName.length()-4) + " Response", "0");
         }
     }
@@ -188,14 +194,14 @@ class ServerProcesses {
 
     void fetchUserDataInBackground(User user, AfterUserAsyncTaskDone callback){
         //    progressDialog.show();
-        new FetchCustomerDataAsyncTask(user, callback).execute();
+        new FetchUserDataAsyncTask(user, callback).execute();
     }
 
-    private class FetchCustomerDataAsyncTask extends AsyncTask<Void,Void,User> {
-        boolean isSuc = false;
+    private class FetchUserDataAsyncTask extends AsyncTask<Void,Void,User> {
+        boolean isDataExchangeWithServerSuccessful = false;
         User               user    ;
         AfterUserAsyncTaskDone callback;
-        FetchCustomerDataAsyncTask(User user, AfterUserAsyncTaskDone callback) {
+        FetchUserDataAsyncTask(User user, AfterUserAsyncTaskDone callback) {
             this.callback = callback;
             this.user     = user    ;
         }
@@ -224,9 +230,9 @@ class ServerProcesses {
                     returnedUser.setEmail        (cryptography.decrypt(jObj.getString("Email")));
                     returnedUser.setRecoveryEmail(cryptography.decrypt(jObj.getString("RecoveryEmail")));
                 }
-                isSuc = true;
+                isDataExchangeWithServerSuccessful = true;
             } catch (Exception e) {
-                isSuc = false;
+                isDataExchangeWithServerSuccessful = false;
                 e.printStackTrace();
                 return null;
             }
@@ -236,14 +242,16 @@ class ServerProcesses {
         @Override
         protected void onPostExecute(User returnedUser) {
             callback.done(returnedUser);
-            Log.e("code233 NA= ", connectionStatusMap.get("Network Availability"));
-            Log.e("code SR= "   , connectionStatusMap.get("ServerURLResponse"));
-            Log.e("code FUD= "  , connectionStatusMap.get("FetchUserData Response"));
-            Log.e("code FUBE= " , connectionStatusMap.get("FetchUserByEmail Response"));
-            Log.e("code ROU= "  , connectionStatusMap.get("RegisterOrUpdateUser Response"));
-            Log.e("code MC= "   , connectionStatusMap.get("MCrypt Response"));
-            Log.e("code AT= "   , connectionStatusMap.get("AddTrip Response"));
+            for(String connectedEntity : connectionStatusMap.keySet())
+                Log.e(connectedEntity + " = ", connectionStatusMap.get(connectedEntity));
 
+//            Log.e("code233 NA= ", connectionStatusMap.get("Network Availability"));
+//            Log.e("code SR= "   , connectionStatusMap.get("ServerURLResponse"));
+//            Log.e("code FUD= "  , connectionStatusMap.get("FetchUserData Response"));
+//            Log.e("code FUBE= " , connectionStatusMap.get("FetchUserByEmail Response"));
+//            Log.e("code ROU= "  , connectionStatusMap.get("RegisterOrUpdateUser Response"));
+//            Log.e("code MC= "   , connectionStatusMap.get("MCrypt Response"));
+//            Log.e("code AT= "   , connectionStatusMap.get("AddTripActivity Response"));
 
             if (connectionStatusMap.get("Network Availability").equals("NO"))
                 showMessage("Error", "No network available",context);
@@ -257,7 +265,7 @@ class ServerProcesses {
             else if (!connectionStatusMap.get("MCrypt Response").equals("200"))
                 showMessage("Error", "URL of file MCrypt.php is unreachable",context);
 
-            else if (!isSuc)
+            else if (!isDataExchangeWithServerSuccessful)
                 showMessage("Error","Error while exchanging data with the server",context);
 
             super.onPostExecute(returnedUser);
@@ -266,14 +274,13 @@ class ServerProcesses {
 
     //==================================================================================================================================
 
-    // stores user data in userPrivateData table
-    void storeUserDataInBackground(String purpose, User customer, AfterUserAsyncTaskDone callback){
-        new StoreUserDataAsynTask(purpose, customer, callback).execute();
+    /** stores the user private data in the data base*/
+    void storeUserDataInBackground(String purpose, User user, AfterUserAsyncTaskDone callback){
+        new StoreUserDataAsynTask(purpose, user, callback).execute();
     }
 
-
     private class StoreUserDataAsynTask extends AsyncTask <Void,Void,Void> {
-        boolean isSuc = false;
+        boolean isDataExchangeWithServerSuccessful = false;
         String  purpose;
         User    user;
         AfterUserAsyncTaskDone callback;
@@ -299,10 +306,10 @@ class ServerProcesses {
                 dataToSend.put("Purpose", cryptography.encrypt(purpose));
                 HttpURLConnection http = setHttpPostRequest(url, dataToSend);
                 postAndGetJasonResponse(http);
-                isSuc = true;
+                isDataExchangeWithServerSuccessful = true;
                 Email.sendEmailAfterRegistrationOrUpdate(user);
             }catch(Exception e){
-                isSuc = false;
+                isDataExchangeWithServerSuccessful = false;
                 e.printStackTrace();
             }
             return null;
@@ -334,41 +341,27 @@ class ServerProcesses {
             else if (!connectionStatusMap.get("MCrypt Response").equals("200"))
                 showMessage("Error", "URL of file MCrypt.php is unreachable",context);
 
-            else if (!isSuc)
-                    Register.showErrorMsg("Error","Error while exchanging data with the server");
+            else if (!isDataExchangeWithServerSuccessful)
+                    showMessage("Error","Error while exchanging data with the server",context);
 
             else if( purpose .equals("Register")){
-                Login.prposeOfRegisterClass=Login.Register;
-                Register.context.startActivity(new Intent(Register.context, Login.class));
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        Login.showErrorMsg("User Registered"  , "An email of your registration "  +
-                                           "data is sent to your recovery account");
-                    }
-                }, 500);
+                Intent intentRegisterLogin = new Intent(context, LoginActivity.class);
+                intentRegisterLogin.putExtra("Purpose","Register");
+                context.startActivity(intentRegisterLogin);
 
             }else if(purpose .equals("Update")){
-                Login.prposeOfRegisterClass=Login.Update;
                 try {
-                    Register.reset();// We are in Register Activity
-                    Register.localStorage.clearUserData();
-                    Register.localStorage.markAsLoggedIn(false);
-                    Register.context.startActivity(new Intent(Register.context, Login.class));
+                    RegisterActivity.localStorage.clearUserData();
+                    RegisterActivity.localStorage.markAsLoggedIn(false);
+                    Intent intentRegisterLogin = new Intent(context, LoginActivity.class);
+                    intentRegisterLogin.putExtra("Purpose","Update");
+                    context.startActivity(intentRegisterLogin);
                 }catch(NullPointerException N){
                     N.printStackTrace(); // we are in change password activity
-                    ChangePassword.context.startActivity(new Intent(ChangePassword.context, Login.class));
+                    context.startActivity(new Intent(context, LoginActivity.class));
                 }
-
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {Login.showErrorMsg("Your session ended", "An email of your updated data is sent to your " +
-                                       "recovery email. Please log in again using the new credentials");
-                        }
-                }, 500);
             }
+
             super.onPostExecute(aVoid);
         }
     }
@@ -377,13 +370,13 @@ class ServerProcesses {
 
     //used in log in to check if the credentials are correct
     void fetchUserDataByEmailOnlyInBackground(String email, AfterUserAsyncTaskDone callback){
-        new FetchCustomerDataByEmailOnlyAsyncTask(email, callback).execute();
+        new FetchUserDataByEmailOnlyAsyncTask(email, callback).execute();
     }
 
-    private class FetchCustomerDataByEmailOnlyAsyncTask extends AsyncTask <Void,Void,User> {
+    private class FetchUserDataByEmailOnlyAsyncTask extends AsyncTask <Void,Void,User> {
         String  email;
         AfterUserAsyncTaskDone callback;
-        FetchCustomerDataByEmailOnlyAsyncTask(String email, AfterUserAsyncTaskDone callback) {
+        FetchUserDataByEmailOnlyAsyncTask(String email, AfterUserAsyncTaskDone callback) {
             this.callback = callback;
             this.email = email;
         }
@@ -413,14 +406,14 @@ class ServerProcesses {
             }
         }
         @Override
-        protected void onPostExecute(User unknownCustomer) {
-            callback.done(unknownCustomer);
-            super.onPostExecute(unknownCustomer);
+        protected void onPostExecute(User user) {
+            callback.done(user);
+            super.onPostExecute(user);
         }
     }
 
 //============================================================================================================
-    /** A method to download json data from url used in placesTask in AddTrip */
+    /** A method to download json data from url used in placesTask in AddTripActivity */
     String downloadUrl(String strUrl) throws IOException{
         String data = "";
         InputStream iStream = null;
@@ -465,12 +458,29 @@ class ServerProcesses {
      * Puts manually-added Trip in TripSummary table of the data base
      * */
     void addTripInBackground(Trip trip, AfterTripTaskDone callback){
-        //    progressDialog.show();
-        new AddTripAsyncTask(trip, callback).execute();
+        addTripAsyncTask = new AddTripAsyncTask(trip, callback).execute();
+        Timer timer = new Timer(); // set timeout of 10 seconds to add the trip and skip trip adding if exceeded
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if(pd.isShowing()) {
+                    pd.dismiss();
+                    addTripAsyncTask.cancel(true);
+                    addTripAsyncTask = null;
+                    Handler handler = new Handler(Looper.getMainLooper());
+                    handler.postDelayed(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                showMessage("Timeout!", "The trip is not added. The server is not responsive at the moment", context);
+                                            }
+                                        },100);
+                }
+            }
+        },ServerProcesses.CONN_TIME_OUT);
     }
 
     private class AddTripAsyncTask extends AsyncTask<Trip,Void,Void> {
-        boolean isSuc = false;
+        boolean isDataExchangeWithServerSuccessful = false;
         Trip               trip     ;
         AfterTripTaskDone callback ;
         String      feedbackMessage ;
@@ -482,19 +492,29 @@ class ServerProcesses {
         @Override
         protected Void doInBackground(Trip... trips) {
             User user = localStorage.getLoggedInUser()  ;
-            Log.e("user Id is", user.getID());
-
             try {
                 URL url = new URL(SERVER_ADDRESS + "AddTrip.php");
                 Map<String,String> dataToSend = new HashMap<>();
                 dataToSend.put("IV"          , cryptography.getIV());
                 dataToSend.put("UserID"      , cryptography.encrypt(user.getID())  );
                 dataToSend.put("Duration"    , cryptography.encrypt(trip.getDuration()));
-                Scanner scanner = new Scanner(trip.getDistance());
+
+
+                // for distance, if fails to get it from google, calculate the length of the direct line between 2 locations
+                Scanner scanner = new Scanner(trip.getDistance()!=null? trip.getDistance() :
+                        findDistanceBetween(new LatLng(trip.getStartAddress().getLatitude(),trip.getStartAddress().getLongitude()),
+                                new LatLng(trip.getStopAddress().getLatitude(),trip.getStopAddress().getLongitude())));
                 dataToSend.put("Distance"    , cryptography.encrypt(String.valueOf(scanner.nextFloat())));
                 dataToSend.put("DistanceUnit", cryptography.encrypt(scanner.next()));
-                dataToSend.put("StartAddress", cryptography.encrypt(trip.getStartAddress().getAddressLine(0)));
-                dataToSend.put("StopAddress" , cryptography.encrypt(trip.getStopAddress().getAddressLine(0)));
+
+
+                dataToSend.put("StartAddress", cryptography.encrypt(trip.getStartAddress().getAddressLine(0)+", " +
+                    (trip.getStartAddress().getLocality() == null? "":(trip.getStartAddress().getLocality()+", "))+
+                     trip.getStartAddress().getCountryName()));
+                dataToSend.put("StopAddress" , cryptography.encrypt(trip.getStopAddress().getAddressLine(0)+", "+
+                    (trip.getStopAddress().getLocality() == null? "":(trip.getStopAddress().getLocality()+", "))+
+                     trip.getStopAddress().getCountryName()));
+
                 int monthStrt = trip.getStartCalendar().get(Calendar.MONTH);
                 int monthStop = trip.getStopCalendar(). get(Calendar.MONTH);
                 int yearStrt  = trip.getStartCalendar().get(Calendar.YEAR);
@@ -505,7 +525,6 @@ class ServerProcesses {
                         //hacking of month-year error as December is skipped
                         ", " +( monthStrt<1 ? 12:formatter.format(monthStrt))+
                         ", " +( monthStrt<1 ? yearStrt-1:yearStrt)));
-
                 dataToSend.put("StopDate" ,cryptography.encrypt(trip.getStopCalendar() .get(Calendar.DAY_OF_MONTH)+
                         ", " +( monthStop<1 ? 12:formatter.format(monthStop))+
                         ", " +( monthStop<1 ? yearStop-1:yearStop)));
@@ -527,24 +546,31 @@ class ServerProcesses {
                     cryptography.setIV(jObj.getString("IV"));
                     feedbackMessage = cryptography.decrypt(jObj.getString("status"));
                 }
-                isSuc = true;
+                isDataExchangeWithServerSuccessful = true;
             } catch (Exception e) {
-                isSuc = false;
+                isDataExchangeWithServerSuccessful = false;
                 e.printStackTrace();
             }
             return null;
         }
 
+        //used to find direct distance between two locations (if driving distance is null by google)
+        String findDistanceBetween(LatLng start, LatLng stop){
+            float[] results = new float[1];
+            Location.distanceBetween(start.latitude, start.longitude,
+                    stop.latitude, stop.longitude, results);
+            return (results[0]>1000) ? (results[0]/1000+" Km") :  (results[0] + " m");
+        }
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            Log.e("code NA= "  , connectionStatusMap.get("Network Availability"));
-            Log.e("code SR= "  , connectionStatusMap.get("ServerURLResponse"));
-            Log.e("code FUD= " , connectionStatusMap.get("FetchUserData Response"));
-            Log.e("code FUBE= ", connectionStatusMap.get("FetchUserByEmail Response"));
-            Log.e("code ROU= " , connectionStatusMap.get("RegisterOrUpdateUser Response"));
-            Log.e("code MC= "  , connectionStatusMap.get("MCrypt Response"));
-            Log.e("code AT= "  , connectionStatusMap.get("AddTrip Response"));
+//            Log.e("code NA= "  , connectionStatusMap.get("Network Availability"));
+//            Log.e("code SR= "  , connectionStatusMap.get("ServerURLResponse"));
+//            Log.e("code FUD= " , connectionStatusMap.get("FetchUserData Response"));
+//            Log.e("code FUBE= ", connectionStatusMap.get("FetchUserByEmail Response"));
+//            Log.e("code ROU= " , connectionStatusMap.get("RegisterOrUpdateUser Response"));
+//            Log.e("code MC= "  , connectionStatusMap.get("MCrypt Response"));
+//            Log.e("code AT= "  , connectionStatusMap.get("AddTrip Response"));
 
             String message = "Trip is added";
             if (connectionStatusMap.get("Network Availability").equals("NO")) {
@@ -559,12 +585,12 @@ class ServerProcesses {
             } else if (!connectionStatusMap.get("MCrypt Response").equals("200")) {
                 showMessage("Error", "URL of file MCrypt.php is unreachable", context);
                 message = "Failed to add trip";
-            } else if (!isSuc) {
+            } else if (!isDataExchangeWithServerSuccessful) {
                 showMessage("Error", "Error while exchanging data with the server", context);
                 message = "Failed to add trip";
             }
 
-            AddTrip.pd.dismiss();
+            pd.dismiss();
             Toast.makeText(context,message,Toast.LENGTH_LONG).show();
             super.onPostExecute(aVoid);
         }

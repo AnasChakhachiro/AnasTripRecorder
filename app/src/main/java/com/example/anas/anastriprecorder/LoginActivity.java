@@ -7,29 +7,25 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
 
-public class Login extends Activity implements View.OnClickListener{
+public class LoginActivity extends Activity implements View.OnClickListener{
 
     final static String Register="Register";
     final static String Update="Update";
-    static String prposeOfRegisterClass="";
-    static Context context;
+    Context context;
     TextView     tvRegister  , tvForgotPassword   ;
     Button       bLogin      , bExit              ;
     EditText     etPassword  , etEmail            ;
     LocalStorage localStorage;
-    static final String[] specialChars = { "!", "@", "#", "$", "%", "^", "&", "*", "(", ")","_","+"
-                                          ,"=", "-", "?", "|", ">", "<", "{", "}", "[", "]", "?" };
-    static final String[] numbers      = {"1", "2" , "3" , "4" , "5" , "6" , "7" , "8" , "9" ,"0"};
     static       String   email = "";
 
     @Override
@@ -63,7 +59,7 @@ public class Login extends Activity implements View.OnClickListener{
                         if (etEmail.getText().length() != 0)
                             bLogin.setEnabled(true);
                     }
-                    if (!isLegalPassword(etPassword.getText().toString())) {
+                    if (!ChangePasswordActivity.isLegalPassword(etPassword.getText().toString())) {
                         etPassword.setError("invalid Password");
                         bLogin.setEnabled(false);
                     } else {
@@ -148,7 +144,7 @@ public class Login extends Activity implements View.OnClickListener{
                         bLogin.setEnabled(true);
                 }
 
-                if (!isLegalPassword(etPassword.getText().toString())) {
+                if (!ChangePasswordActivity.isLegalPassword(etPassword.getText().toString())) {
                     etPassword.setError("invalid Password");
                     bLogin.setEnabled(false);
                 } else {
@@ -161,21 +157,6 @@ public class Login extends Activity implements View.OnClickListener{
 
     }
 
-
-    public static boolean isLegalPassword(String password) {
-        // PW has 8 or more characters and one char at least is a number and one at least is special char
-
-        if(password.length()<8)  return false;
-
-        for (int i = 0; i < specialChars.length - 1; i++) {
-            if (password.contains(specialChars[i]))
-                for (int j = 0; j < numbers.length - 1; j++)
-                    if (password.contains(numbers[j]))  return true;
-        }
-        return false;
-    }
-
-
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -186,11 +167,6 @@ public class Login extends Activity implements View.OnClickListener{
                 etEmail.setText("");
                 localStorage.clearUserData();
                 localStorage.markAsLoggedIn(false);
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
                 android.os.Process.killProcess(android.os.Process.myPid());
                 System.exit(1);
                 break;
@@ -199,13 +175,13 @@ public class Login extends Activity implements View.OnClickListener{
             case R.id.bLogin:
                 String email            = etEmail   .getText().toString();
                 String password         = etPassword.getText().toString();
-                User loggingOnCustomer  = new User(email,password);
-                authenticate(loggingOnCustomer);
+                User loggingOnUser  = new User(email,password);
+                authenticate(loggingOnUser);
                 break;
 
             case R.id.tvForgotPassword:
                 AlertDialog.Builder alert = new AlertDialog.Builder(this);
-                final EditText editText= new EditText(Login.this);
+                final EditText editText= new EditText(LoginActivity.this);
                 editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
                 alert.setMessage("Please, enter the email of your account");
                 alert.setTitle  ("Forgot password?");
@@ -227,7 +203,7 @@ public class Login extends Activity implements View.OnClickListener{
                 break;
 
             case R.id.tvRegister:
-                startActivity(new Intent(this, Register.class));
+                startActivity(new Intent(this, RegisterActivity.class));
                 break;
         }
     }
@@ -239,8 +215,8 @@ public class Login extends Activity implements View.OnClickListener{
         serverProcesses.fetchUserDataByEmailOnlyInBackground(email, new AfterUserAsyncTaskDone() {
 
             @Override
-            public void done(User unknownCustomer) {
-                if (unknownCustomer == null) {
+            public void done(User user) {
+                if (user == null) {
                     showErrorMsg("Error", "Please, make sure that the email entered is correct\n" +
                             "and check your internet connection");
                 } else {
@@ -258,11 +234,11 @@ public class Login extends Activity implements View.OnClickListener{
             @Override
             public void done(User returnedUser) {
                 if (returnedUser != null)
-                    Login.this.logUserIn(returnedUser);
+                    LoginActivity.this.logUserIn(returnedUser);
                 else if(serverProcesses.connectionStatusMap.get("Network Availability"  ).equals("YES")
                      && serverProcesses.connectionStatusMap.get("ServerURLResponse"     ).equals("200")
                      && serverProcesses.connectionStatusMap.get("FetchUserData Response").equals("200")){
-                    showErrorMsg("Login Error", "User name or/and password are incorrect");
+                    showErrorMsg("LoginActivity Error", "User name or/and password are incorrect");
                 } else
                     serverProcesses.fetchUserDataInBackground(null, new AfterUserAsyncTaskDone() {
                         @Override public void done(User returnedUser){}
@@ -272,16 +248,39 @@ public class Login extends Activity implements View.OnClickListener{
     }
 
     @Override
+    protected void onStart() {
+        etEmail.clearFocus();
+        etPassword.clearFocus();
+        showMsgFromPreviousActivity();
+        super.onStart();
+    }
+
+    private void showMsgFromPreviousActivity(){
+        try { // when LoginActivity is called by Register class
+            if (getIntent().getStringExtra("Purpose").equals("Register")) {
+                showErrorMsg("User Registered", "An email of your registration " +
+                        "data is sent to your recovery account");
+            } else if (getIntent().getStringExtra("Purpose").equals("Update")) {
+                showErrorMsg("Your session ended", "An email of your updated data is sent to your " +
+                        "recovery email. Please log in again using the new credentials");
+            }
+            //reset the purpose field not get this message every time the activity starts
+            getIntent().putExtra("Purpose","");
+        }catch (Exception e){
+            // when LoginActivity is not called by Register class or on the application start
+            Log.e("expected", " Just ignore this exception");
+        }
+    }
+
+    @Override
     public void onBackPressed(){}
 
 
-
-
-    private void logUserIn(User customer){
+    private void logUserIn(User user){
         try {
-            localStorage.storeUserData(customer);
+            localStorage.storeUserData(user);
             localStorage.markAsLoggedIn(true);
-            ServerProcesses.localStorage.storeUserData(customer);
+            ServerProcesses.localStorage.storeUserData(user);
             startActivity(new Intent(this, MainActivity.class));
         }catch(Exception e){
             e.printStackTrace();
@@ -290,34 +289,23 @@ public class Login extends Activity implements View.OnClickListener{
 
 
     public void openChangePasswordScreen(){
-        startActivity(new Intent(Login.this, ChangePassword.class));
         ServerProcesses serverProcesses = new ServerProcesses(this);
-        serverProcesses.fetchUserDataByEmailOnlyInBackground(Login.email, new AfterUserAsyncTaskDone() {
+        serverProcesses.fetchUserDataByEmailOnlyInBackground(LoginActivity.email, new AfterUserAsyncTaskDone() {
             @Override
-            public void done(User returnedCustomer) {
-                if (returnedCustomer != null) {
-                    ChangePassword.etAddedName1.setText(returnedCustomer.getName());
-                    ChangePassword.etAddedEmail1.setText(returnedCustomer.getEmail());
-                    ChangePassword.etRecoveryEmail1.setText(returnedCustomer.getRecoveryEmail());
-                    ChangePassword.etAddedName1.setActivated(false);
-                    ChangePassword.etAddedEmail1.setActivated(false);
-                    ChangePassword.etRecoveryEmail1.setActivated(false);
-
-                    ChangePassword.etNewPassword.setText("");
-                    ChangePassword.etNewConfirmedPassword.setText("");
+            public void done(User returnedUser) {
+                if (returnedUser != null) {
+                    Intent intent = new Intent(LoginActivity.this, ChangePasswordActivity.class);
+                    intent.putExtra("Name", returnedUser.getName());
+                    intent.putExtra("Email", returnedUser.getEmail());
+                    intent.putExtra("RecoveryEmail", returnedUser.getRecoveryEmail());
+                    startActivity(intent);
 
                 } else {
-                    try {
-                        final Handler handler = new Handler();
-                        handler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                showErrorMsg("Connection Error", "Couldn't get data from BE. Please, check your internet connection");
-                            }
-                        }, 50);//we need some delay to allow Register.java to assign value to ChangePassword.context or we'll get crash
-                    } catch (Exception N) {
-                        N.printStackTrace();//in case no value is assigned to Register.context though
-                    }
+                    Intent intent = new Intent(LoginActivity.this, ChangePasswordActivity.class);
+                    intent.putExtra("Name", "");
+                    intent.putExtra("Email", "");
+                    intent.putExtra("RecoveryEmail", "");
+                    startActivity(intent);
                 }
             }
         });
@@ -325,8 +313,8 @@ public class Login extends Activity implements View.OnClickListener{
     }
 
 
-    public  static void showErrorMsg(String title,String msg){
-        AlertDialog.Builder dialogueBuilder = new AlertDialog.Builder(Login.context);
+    public void showErrorMsg(String title,String msg){
+        AlertDialog.Builder dialogueBuilder = new AlertDialog.Builder(this);
         dialogueBuilder.setTitle(title);
         dialogueBuilder.setMessage(msg);
         dialogueBuilder.setPositiveButton("OK",null);

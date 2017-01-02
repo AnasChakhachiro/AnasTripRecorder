@@ -68,14 +68,14 @@ class LocalStorage {
 
 
     // stores user data in shared preference
-    void storeUserData(User customer) {
+    void storeUserData(User user) {
         try {
             Editor spEditor = userLocalDB.edit();
-            spEditor.putString("ID"            , customer.getID()           );
-            spEditor.putString("Name"          , customer.getName()         );
-            spEditor.putString("Email"         , customer.getEmail()        );
-            spEditor.putString("Password"      , customer.getPassword()     );
-            spEditor.putString("RecoveryEmail" , customer.getRecoveryEmail());
+            spEditor.putString("ID"            , user.getID()           );
+            spEditor.putString("Name"          , user.getName()         );
+            spEditor.putString("Email"         , user.getEmail()        );
+            spEditor.putString("Password"      , user.getPassword()     );
+            spEditor.putString("RecoveryEmail" , user.getRecoveryEmail());
             spEditor.apply();
         }catch (Exception e){
             e.printStackTrace();

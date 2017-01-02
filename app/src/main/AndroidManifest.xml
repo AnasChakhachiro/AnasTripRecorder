@@ -31,10 +31,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Login"></activity>
-        <activity android:name=".ChangePassword"></activity>
-        <activity android:name=".Register"></activity>
-        <activity android:name=".AddTrip"></activity>
+        <activity android:name=".LoginActivity"></activity>
+        <activity android:name=".ChangePasswordActivity"></activity>
+        <activity android:name=".RegisterActivity"></activity>
+        <activity android:name=".AddTripActivity"></activity>
 
 
         <meta-data android:name="com.google.android.maps.v2.API_KEY"

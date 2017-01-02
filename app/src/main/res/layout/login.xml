@@ -6,7 +6,8 @@
     android:fillViewport="true"
     android:id="@+id/scrollView"
     android:background="#438692"
-    android:divider="#438692">
+    android:divider="#438692"
+    >
 
     <LinearLayout
         android:id="@+id/layout"
@@ -14,7 +15,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#438692"
-        android:divider="#438692">
+        android:divider="#438692"
+        android:focusable="true"
+        android:focusableInTouchMode="true">
 
         <ImageView
         android:layout_width="match_parent"
@@ -41,7 +44,9 @@
         android:maxLines="1"
         android:textColor="#00434F"
         android:textStyle="bold"
-        android:textColorHint="#859197"/>
+        android:textColorHint="#859197"
+        android:nextFocusUp="@id/etEmail"
+        android:nextFocusLeft="@id/etEmail"/>
 
 
         <EditText

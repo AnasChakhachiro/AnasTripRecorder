@@ -59,9 +59,11 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
-public class AddTrip extends FragmentActivity implements TimePickerDialog.OnTimeSetListener {
+public class AddTripActivity extends FragmentActivity implements TimePickerDialog.OnTimeSetListener {
     private static final String BROWSER_KEY = "AIzaSyAIagLqArXwdqGQPL7miJK46IiKKAzPnm8";
     // layout variables
     Button bNext, bPrevious, bAddTrip;
@@ -755,7 +757,7 @@ public class AddTrip extends FragmentActivity implements TimePickerDialog.OnTime
 
 //Layout Management Related Functions ===============================================================================================
 
-    /** Display a view in the AddTrip layout*/
+    /** Display a view in the AddTripActivity layout*/
     private void activate(View view) {
         view.setEnabled(true);
         view.setBackgroundColor(Color.WHITE);
@@ -763,7 +765,7 @@ public class AddTrip extends FragmentActivity implements TimePickerDialog.OnTime
             ((EditText) view).setHintTextColor(Color.LTGRAY);
     }
 
-    /** hide a view in the AddTrip layout*/
+    /** hide a view in the AddTripActivity layout*/
     private void deactivate(View view) {
         view.setEnabled(false);
         view.setBackgroundColor(DARK_COLOR);
@@ -771,7 +773,7 @@ public class AddTrip extends FragmentActivity implements TimePickerDialog.OnTime
             ((EditText) view).setHintTextColor(DARK_COLOR);
     }
 
-    /** disable map in the AddTrip layout for long-clicking and hide myLocation button*/
+    /** disable map in the AddTripActivity layout for long-clicking and hide myLocation button*/
     private void deactivateMap(GoogleMap mGoogleMap) {
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -838,7 +840,7 @@ public class AddTrip extends FragmentActivity implements TimePickerDialog.OnTime
         etStopLon.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_NUMBER_FLAG_SIGNED);
     }
 
-    /** Make each of start and stop locations parts of AddTrip Layout fill and fit in the device screen.*/
+    /** Make each of start and stop locations parts of AddTripActivity Layout fill and fit in the device screen.*/
     private void setLayoutDimensions() {
         DisplayMetrics displaymetrics = new DisplayMetrics();
         this.getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
@@ -884,11 +886,36 @@ public class AddTrip extends FragmentActivity implements TimePickerDialog.OnTime
 
     private boolean dateTimeIsInFuture(TextView dateTextView, TextView timeTextView) {
         Calendar currentCalendar = Calendar.getInstance();
-        Calendar chosenCalendar  = generateChosenCalendar(dateTextView,timeTextView);
-        return chosenCalendar.after(currentCalendar);
+        // there is a bug in Android 4.4.4: it skips December! hacked it in AddTripAsyncTask
+        //currentCalendar.after will not work fine for chosen date in December
+        int dayCurrent    = currentCalendar.get(Calendar.DAY_OF_MONTH);
+        int monthCurrent  = currentCalendar.get(Calendar.MONTH) + 1;
+        int yearCurrent   = currentCalendar.get(Calendar.YEAR);
+        int hourCurrent   = currentCalendar.get(Calendar.HOUR_OF_DAY);
+        int minuteCurrent = currentCalendar.get(Calendar.MINUTE);
+
+        Calendar chosenCalendar = generateChosenCalendar(dateTextView, timeTextView);
+        int dayChosen    = chosenCalendar.get(Calendar.DAY_OF_MONTH);
+        int monthChosen  = chosenCalendar.get(Calendar.MONTH);
+        int yearChosen   = chosenCalendar.get(Calendar.YEAR);
+        int hourChosen   = chosenCalendar.get(Calendar.HOUR_OF_DAY);
+        int minuteChosen = chosenCalendar.get(Calendar.MINUTE);
+        yearChosen  = (monthChosen < 1 ? yearChosen - 1 : yearChosen);
+        monthChosen = (monthChosen < 1 ? 12 : monthChosen);
+
+        Log.e("current calendar", monthCurrent + " / " + yearCurrent);
+        Log.e("chosen calendar", monthChosen + " / " + yearChosen);
+
+        // return true if chosen date/time is fully after current date/time (returns false if equal)
+        return yearChosen > yearCurrent ||
+                yearChosen >= yearCurrent && (monthChosen > monthCurrent
+                    || monthChosen >= monthCurrent && (dayChosen > dayCurrent
+                       || dayChosen >= dayCurrent && (hourChosen > hourCurrent
+                          || hourChosen >= hourCurrent && (minuteChosen > minuteCurrent
+                             || minuteChosen >= minuteCurrent))));
     }
 
-    /** returns calendar of the choosen data*/
+    /** returns calendar of the chosen data*/
     private Calendar generateChosenCalendar(TextView dateTextView,TextView timeTextView) {
         // there is a bug in Android 4.4.4: it skips December! hacked it in AddTripAsyncTask
         String date = dateTextView . getText( ) . toString( );
@@ -935,12 +962,12 @@ public class AddTrip extends FragmentActivity implements TimePickerDialog.OnTime
         public void onDateSet(DatePicker datePicker, int year, int month, int day) {
             Calendar calendar = Calendar.getInstance();
             calendar.set(year,month,day);
-            int weekDayOrder=calendar.get(Calendar.DAY_OF_WEEK)-1;
+            int weekDayIndex = calendar.get(Calendar.DAY_OF_WEEK)-1;
             DecimalFormat myFormatter = new DecimalFormat("00");
             if(PickerDialogForDate.dateTag.equals(START_DATE_PICKER))
-                tvStrtDate.setText(weekDays[weekDayOrder] + " : " + myFormatter.format(day) + " " + months[month]+ " " + year);
+                tvStrtDate.setText(weekDays[weekDayIndex] + " : " + myFormatter.format(day) + " " + months[month]+ " " + year);
             else if (PickerDialogForDate.dateTag.equals(STOP_DATE_PICKER))
-                tvStopDate.setText(weekDays[weekDayOrder] + " : " + myFormatter.format(day) + " " + months[month]+ " " + year);
+                tvStopDate.setText(weekDays[weekDayIndex] + " : " + myFormatter.format(day) + " " + months[month]+ " " + year);
         }
     }
 
@@ -1128,7 +1155,7 @@ public class AddTrip extends FragmentActivity implements TimePickerDialog.OnTime
                              generateChosenCalendar(tvStrtDate,tvStrtTime),
                              generateChosenCalendar(tvStopDate,tvStopTime)
         );
-        new ServerProcesses(this).addTripInBackground(trip, new AfterTripTaskDone() {
+        new ServerProcesses(AddTripActivity.this).addTripInBackground(trip, new AfterTripTaskDone() {
             @Override
             public void done(Trip trip) {
             }

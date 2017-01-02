@@ -10,5 +10,6 @@
     </string-array>
 
     <string name="str_atv_places">Enter Place Here</string>
+    <string name="Register">Update Data</string>
 
 </resources>

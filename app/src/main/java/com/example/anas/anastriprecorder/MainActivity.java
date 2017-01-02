@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onStart();
         userLocalStore = new LocalStorage(this);
         if (!userLocalStore.isLoggedIn())
-            startActivity(new Intent(MainActivity.this, Login.class));
+            startActivity(new Intent(MainActivity.this, LoginActivity.class));
     }
 
     @Override
@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         bAddTrip.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(getBaseContext(), AddTrip.class));
+                startActivity(new Intent(getBaseContext(), AddTripActivity.class));
             }
         });
 
@@ -204,7 +204,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             showGpsOffAlertMessage(MainActivity.this);
                         } else {
                             googleApiClient.connect();
-                            //locationManager.requestLocationUpdates("gps", 10000, 0, locationListener);
                         }
                         break;
                     case (STOP):
@@ -212,11 +211,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 "\nstop and ignore recorded trip," +
                                 "\nstop and save recorded trip," +
                                 "\nor keep recording the trip?");
-                        // add function for final save
 
                         break;
                     case (PAUSE):
-                        //locationManager.removeUpdates(locationListener);
                         googleApiClient.disconnect();
                         /** we save the recorded location so far in list for tripPart
                          then we add this tripPart_locations_list into (list of lists)
@@ -363,12 +360,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mGoogleMap = googleMap;
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // the permissions are embedded in the manifest no need for check
             return;
         }
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
+
         googleApiClient = new GoogleApiClient.Builder(this)
                         .addApi(LocationServices.API).addConnectionCallbacks(this)
                         .addOnConnectionFailedListener(this).build();
@@ -385,7 +380,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     public void logout(View view){
-        final Intent intent = new Intent(MainActivity.this, Login.class);
+        final Intent intent = new Intent(MainActivity.this, LoginActivity.class);
         userLocalStore.clearUserData();
         userLocalStore.markAsLoggedIn(false);
         startActivity(intent);
@@ -393,23 +388,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     // prepares update activity layout
     public void openUpdateScreen(){
-        startActivity(new Intent(this, Register.class));
-        Log.e("debugging",userLocalStore.getLoggedInUser().getEmail());
-        final Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Register.bRegister      .setActivated(true);
-                Register.bRegister      .setText("Update Data");
-                Register.etAddedName    .setText(userLocalStore.getLoggedInUser().getName()         );
-                Register.etAddedEmail   .setText(userLocalStore.getLoggedInUser().getEmail()        );
-                Register.etRecoveryEmail.setText(userLocalStore.getLoggedInUser().getRecoveryEmail());
-                Register.etAddedPassword.setText(userLocalStore.getLoggedInUser().getPassword()     );
-                Register.etConfirmedPassword.setText("");
-                Register.etConfirmedPassword.setVisibility(View.VISIBLE);
-            }
-        }, 100);
+        Intent intent = new Intent(this, RegisterActivity.class);
+        intent.putExtra("Purpose", "Update");
+        startActivity(intent);
     }
+
+    @Override
+    public void onBackPressed() {}
 
     // manages the spinner from which we can choose the Main activity map style
     public void setupMapStyleSpinner(int mapStyleSpinnerID) {
