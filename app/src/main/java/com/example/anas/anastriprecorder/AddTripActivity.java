@@ -59,12 +59,11 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Timer;
-import java.util.TimerTask;
+
 
 
 public class AddTripActivity extends FragmentActivity implements TimePickerDialog.OnTimeSetListener {
-    private static final String BROWSER_KEY = "AIzaSyAIagLqArXwdqGQPL7miJK46IiKKAzPnm8";
+    private static final String BROWSER_KEY = "myBrowserAPIKey";
     // layout variables
     Button bNext, bPrevious, bAddTrip;
     LinearLayout startPartLayout, stopPartLayout;
