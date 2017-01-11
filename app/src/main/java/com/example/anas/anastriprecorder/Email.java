@@ -6,8 +6,8 @@ import android  .text       .TextUtils                  ;
 import java     .util       .Date                       ;
 import java     .util       .Properties                 ;
 import javax    .activation .CommandMap                 ;
-import javax    .activation .DataHandler                ;
-import javax    .activation .FileDataSource             ;
+/*import javax    .activation .DataHandler                ;
+import javax    .activation .FileDataSource             ; */
 import javax    .activation .MailcapCommandMap          ;
 import javax    .mail       .BodyPart                   ;
 import javax    .mail       .Multipart                  ;
@@ -20,7 +20,7 @@ import javax    .mail       .internet  .MimeMessage     ;
 import javax    .mail       .internet  .MimeMultipart   ;
 
 
-public class Email extends javax.mail.Authenticator{
+ class Email extends javax.mail.Authenticator{
     private String      user        ;
     private String      pass        ;
     private String[]    to          ;
@@ -35,7 +35,7 @@ public class Email extends javax.mail.Authenticator{
     private Multipart   multipart   ;
     private MimeMessage msg         ;
 
-    public Email(String user, String pass) {
+     Email(String user, String pass) {
         this.user = user;
         this.pass = pass;
 
@@ -57,7 +57,7 @@ public class Email extends javax.mail.Authenticator{
     }
 
 
-    public boolean sendEmailInBackground(){
+     boolean sendEmailInBackground(){
         try {
             Properties props = setProperties();
             Session session = Session.getInstance(props, this);
@@ -88,7 +88,7 @@ public class Email extends javax.mail.Authenticator{
     }
 
 
-    public class sendEmailAsyncTask extends AsyncTask<Void,Void,Void> {
+     private class sendEmailAsyncTask extends AsyncTask<Void,Void,Void> {
         @Override
         protected Void doInBackground(Void... voids) {
             try {
@@ -105,13 +105,13 @@ public class Email extends javax.mail.Authenticator{
     }
 
 
-    public void addAttachment(String filename) throws Exception {
+    /*public void addAttachment(String filename) throws Exception {
         BodyPart messageBodyPart = new MimeBodyPart();
         FileDataSource source =  new FileDataSource(filename);
         messageBodyPart.setDataHandler(new DataHandler(source));
         messageBodyPart.setFileName(filename);
         multipart.addBodyPart(messageBodyPart);
-    }
+    }*/
 
     @Override
     protected javax.mail.PasswordAuthentication getPasswordAuthentication() {
@@ -130,22 +130,22 @@ public class Email extends javax.mail.Authenticator{
         return props;
     }
 
-    public static boolean isValidEmail(CharSequence email) {
+    static boolean isValidEmail(CharSequence email) {
         return !TextUtils.isEmpty(email) && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
     }
 
-    public void setBody(String body) {this.body = body;}
+    void setBody(String body) {this.body = body;}
 
-    public void setSubject(String subject) {this.subject = subject;}
+    void setSubject(String subject) {this.subject = subject;}
 
     public void setFrom(String from) {this.from = from;}
 
     public void setTo(String[] to) {this.to = to;}
 
 
-    public static void sendEmailAfterRegistrationOrUpdate(User user) {
+     static void sendEmailAfterRegistrationOrUpdate(User user) {
         {
-            Email mail = new Email("myEmailAddress@gmail.com", "myPassword");
+            Email mail = new Email("triprecordermailservice@gmail.com", "myAplication2016");
             String updatedName = user.getName();
             String updatedEmail = user.getEmail();
             String nPW = user.getPassword();

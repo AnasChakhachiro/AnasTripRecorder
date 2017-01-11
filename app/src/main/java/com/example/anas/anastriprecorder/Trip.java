@@ -1,6 +1,10 @@
 package com.example.anas.anastriprecorder;
 
 import android.location.Address;
+import android.location.Location;
+
+import com.google.android.gms.maps.model.LatLng;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.BufferedInputStream;
@@ -19,22 +23,52 @@ import java.util.concurrent.TimeUnit;
 
 class Trip {
     private Address  mStartAddress , mStopAddress;
+    private String mStartAddressString = "" ,mStopAddressString = "";
     private Calendar mStartCalendar,mStopCalendar;
     private String distance = "0 m", duration = "0 sec";
+    private LatLng mStartLatLng,mStopLatLng;
+    private boolean mIsManuallyAdded;
+    private int startMonth = -1 , stopMonth = -1;
 
-    Trip(Address startAddress, Address stopAddress, Calendar startCalendar, Calendar stopCalendar){
+    Trip(Address startAddress, Address stopAddress, Calendar startCalendar, Calendar stopCalendar, boolean isManuallyAdded){
         this.mStartCalendar=startCalendar;
         this.mStopCalendar = stopCalendar;
         this.mStartAddress = startAddress;
         this.mStopAddress = stopAddress;
+        this.mIsManuallyAdded = isManuallyAdded;
         Map<TimeUnit, Long> timeDifference = computeDuration(startCalendar.getTime(), stopCalendar.getTime());
         this.duration = timeDifference.get(TimeUnit.DAYS) + " DAYS\n" +
                 timeDifference.get(TimeUnit.HOURS) + " HOURS\n" +
                 timeDifference.get(TimeUnit.MINUTES) + " MINUTES";
-        this.distance = getDistanceFromGoogle(MapsOperations.markerStrt.getPosition().latitude ,
-                                              MapsOperations.markerStrt.getPosition().longitude,
-                                              MapsOperations.markerStop.getPosition().latitude ,
-                                              MapsOperations.markerStop.getPosition().longitude);
+        this.distance = getDistanceFromGoogle(startAddress.getLatitude(),
+                                              startAddress.getLongitude(),
+                                              stopAddress.getLatitude(),
+                                              stopAddress.getLongitude());
+        if(!isManuallyAdded) { // needed to unify the way of hacking December bug in addTrip and Main activities
+            this.startMonth = mStartCalendar.get(Calendar.MONTH) + 1;
+            this.stopMonth = mStopCalendar.get(Calendar.MONTH) + 1;
+        }
+    }
+
+    //this constructor used when no internet service
+    //we need the month here to unify the way of hacking the December bug in adding manually and recording
+    Trip(String startAddress, String stopAddress, LatLng startLatLng, LatLng stopLatLng, Calendar startDate, Calendar stopDate, boolean isManuallyAdded) {
+        this.mStartCalendar=startDate;
+        this.mStopCalendar = stopDate;
+        this.mStartAddressString = startAddress;
+        this.mStopAddressString = stopAddress;
+        this.mIsManuallyAdded = isManuallyAdded;
+        this.mStartLatLng = startLatLng;
+        this.mStopLatLng = stopLatLng;
+        Map<TimeUnit, Long> timeDifference = computeDuration(startDate.getTime(), stopDate.getTime());
+        this.duration = timeDifference.get(TimeUnit.DAYS) + " DAYS\n" +
+                timeDifference.get(TimeUnit.HOURS) + " HOURS\n" +
+                timeDifference.get(TimeUnit.MINUTES) + " MINUTES";
+        this.distance = findDistanceBetween(startLatLng, stopLatLng);
+        if(!isManuallyAdded) {// needed to unify the way of hacking December bug in addTrip and Main activities
+            this.startMonth = mStartCalendar.get(Calendar.MONTH) + 1;
+            this.stopMonth = mStopCalendar.get(Calendar.MONTH) + 1;
+        }
     }
 
     private static Map<TimeUnit,Long> computeDuration(Date date1, Date date2) {
@@ -53,12 +87,18 @@ class Trip {
     }
 
 
+    /** Used to find direct distance between two locations (if driving distance is null by google)*/
+    String findDistanceBetween(LatLng start, LatLng stop){
+        float[] results = new float[1];
+        Location.distanceBetween(start.latitude, start.longitude,
+                stop.latitude, stop.longitude, results);
+        return (results[0]>1000) ? (results[0]/1000+" Km") :  (results[0] + " m");
+    }
+
+
     private String parsedDistance;
     private String getDistanceFromGoogle(final double lat1, final double lon1, final double lat2, final double lon2) {
-        /*isDistanceTaskFinished = false;
-        DistanceTask distanceTask = new DistanceTask();
-        distanceTask.execute(MapsOperations.markerStrt.getPosition(), MapsOperations.markerStop.getPosition());
-        */
+
         Thread thread=new Thread(new Runnable() {
             @Override
                 public void run() {
@@ -92,29 +132,39 @@ class Trip {
         return parsedDistance;
     }
 
-
     String getDistance(){
-        return distance;
+        return this.distance;
     }
-
     String getDuration(){
         return this.duration;
     }
 
     Address getStartAddress(){
-        return mStartAddress;
+        return this.mStartAddress;
+    }
+    String getStartAddressString(){
+        return this.mStartAddressString;
     }
 
-    Address getStopAddress(){
-        return mStopAddress;
-    }
+
+    Address getStopAddress(){return this.mStopAddress;}
+    String getStopAddressString(){return this.mStopAddressString;}
+
+    LatLng getStartLatLng(){return this.mStartLatLng;}
+    LatLng getStopLatLng() {return this.mStopLatLng;}
+
+    int getStartMonth(){return  this.startMonth;}
+    int getStopMonth(){return  this.stopMonth;}
+
 
     Calendar getStartCalendar(){
-        return mStartCalendar;
+        return this.mStartCalendar;
     }
 
     Calendar getStopCalendar(){
-        return mStopCalendar;
+        return this.mStopCalendar;
     }
+
+    boolean isManuallyAdded() {return this.mIsManuallyAdded;}
 }
 

@@ -17,7 +17,7 @@ import java.util.List;
 
 class MapsOperations  {
 
-    static Marker markerStrt, markerStop , markerMain;
+    static Marker markerStart, markerStop , markerMain;
 
 
     List<LatLng> locationString2Coordinates(Context context, String locationName, int resultsNumber){
@@ -45,10 +45,10 @@ class MapsOperations  {
 
     void  goToLocation(GoogleMap gm, LatLng latLng, int zoom, Marker marker, String markerTitle, String markerSnippet) {
 
-        if(marker == MapsOperations.markerStrt) {
-            if (MapsOperations.markerStrt != null)
-                MapsOperations.markerStrt.remove();
-            MapsOperations.markerStrt = gm.addMarker(new MarkerOptions()
+        if(marker == MapsOperations.markerStart) {
+            if (MapsOperations.markerStart != null)
+                MapsOperations.markerStart.remove();
+            MapsOperations.markerStart = gm.addMarker(new MarkerOptions()
                                           .position(latLng)
                                           .title(markerTitle)
                                           .snippet(markerSnippet));
@@ -72,8 +72,8 @@ class MapsOperations  {
     }
 
 
-
-    List<Address> coordinates2locationString (Context context, double latitude, double longitude,int resultsNumber){
+    /** This requires internet connection to get the address of the given LatLng coordinates*/
+    List<Address> latLng2AddressesList(Context context, double latitude, double longitude, int resultsNumber){
         Geocoder geoCoder = new Geocoder(context);
         List<Address> addressesList = null;
         try {

@@ -72,46 +72,4 @@ class PlaceJSONParser {
         }
         return place;
     }
-
-//================================================================================================
-HashMap<String, String> parseDistance(JSONObject jObject) {
-        JSONObject jDistance = null;
-        try {
-            /** Retrieves all the elements in the 'places' array */
-            jDistance = jObject
-                    .getJSONArray("rows")
-                    .getJSONObject(0)
-                    .getJSONArray("elements")
-                    .getJSONObject(0)
-                    .getJSONObject("distance");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return getDistance(jDistance);
-    }
-
-
-
-    private HashMap<String, String> getDistance(JSONObject jDistance) {
-
-        HashMap<String, String> distance = new HashMap<>();
-
-        String value;
-        String text;
-
-        try {
-
-            value = String.valueOf(jDistance.getInt("value"));
-            text = jDistance.getString("text");
-
-            distance.put("value", value);
-            distance.put("text", text);
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return distance;
-    }
-
-    //==============================================================================================
 }

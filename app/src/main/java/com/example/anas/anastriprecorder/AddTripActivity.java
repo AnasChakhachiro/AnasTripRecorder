@@ -60,21 +60,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
-
-
 public class AddTripActivity extends FragmentActivity implements TimePickerDialog.OnTimeSetListener {
-    private static final String BROWSER_KEY = "myBrowserAPIKey";
+    private static final String BROWSER_KEY = "AIzaSyAIagLqArXwdqGQPL7miJK46IiKKAzPnm8";
     // layout variables
     Button bNext, bPrevious, bAddTrip;
     LinearLayout startPartLayout, stopPartLayout;
     HorizontalScrollView hsv;
-    EditText etStrtLat, etStopLat, etStrtLon, etStopLon;
-    TextView tvStrtDate, tvStopDate, tvStrtTime, tvStopTime;
-    AutoCompleteTextView autoCompleteTvStrt, autoCompleteTvStop;
-    ImageView transparentStrtImageView, transparentStopImageView;
-    RadioButton rbStringLocationStrt, rbLatLonLocationStrt, rbMapTapLocationStrt;
+    EditText etStartLat, etStopLat, etStartLon, etStopLon;
+    TextView tvStartDate, tvStopDate, tvStartTime, tvStopTime;
+    AutoCompleteTextView autoCompleteTvStart, autoCompleteTvStop;
+    ImageView transparentStartImageView, transparentStopImageView;
+    RadioButton rbStringLocationStart, rbLatLonLocationStart, rbMapTapLocationStart;
     RadioButton rbStringLocationStop, rbLatLonLocationStop, rbMapTapLocationStop;
-    MapFragment strtMapFragment, stopMapFragment;
+    MapFragment startMapFragment, stopMapFragment;
     static final int DARK_COLOR = 17170447;
 
     //Activity general variables
@@ -86,13 +84,13 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
     //Time Data-related variables
     static final String START_TIME_PICKER = "start_time_picker";
     static final String STOP_TIME_PICKER  = "stop_time_picker";
-    static int mHourStrt, mMinuteStrt, mHourStop, mMinuteStop;
+    static int mHourStart, mMinuteStart, mHourStop, mMinuteStop;
 
     // Maps and locations-related variables
-    static GoogleMap mGoogleMapStrt, mGoogleMapStop;
-    static Address tmpMapStrtAddress, tmpMapStopAddress,
-                   tmpLatLonStrtAddress, tmpLatLonStopAddress,
-                   tmpAutoCompStrtAddress, tmpAutoCompStopAddress;
+    static GoogleMap mGoogleMapStart, mGoogleMapStop;
+    static Address tmpMapStartAddress, tmpMapStopAddress,
+            tmpLatLonStartAddress, tmpLatLonStopAddress,
+            tmpAutoCompStartAddress, tmpAutoCompStopAddress;
     static final String START_LOCATION = "Start Location";
     static final String STOP_LOCATION  = "Stop Location";
     static final int DEFAULT_ZOOM = 15;
@@ -117,29 +115,29 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
         //context = getBaseContext();
 
         startPartLayout = (LinearLayout) findViewById(R.id.L1);
-        stopPartLayout = (LinearLayout) findViewById(R.id.L2);
-        etStrtLat = (EditText) findViewById(R.id.etLatitudeStart);
-        etStrtLon = (EditText) findViewById(R.id.etLongitudeStart);
-        etStopLat = (EditText) findViewById(R.id.etLatitudeStop);
-        etStopLon = (EditText) findViewById(R.id.etLongitudeStop);
-        tvStrtDate = (TextView) findViewById(R.id.tvStartDate);
-        tvStopDate = (TextView) findViewById(R.id.tvStopDate);
-        tvStrtTime = (TextView) findViewById(R.id.tvStartTime);
-        tvStopTime = (TextView) findViewById(R.id.tvStopTime);
-        bNext = (Button) findViewById(R.id.bGoToStopView);
+        stopPartLayout  = (LinearLayout) findViewById(R.id.L2);
+        etStartLat = (EditText) findViewById(R.id.etLatitudeStart);
+        etStartLon = (EditText) findViewById(R.id.etLongitudeStart);
+        etStopLat  = (EditText) findViewById(R.id.etLatitudeStop);
+        etStopLon  = (EditText) findViewById(R.id.etLongitudeStop);
+        tvStartDate = (TextView) findViewById(R.id.tvStartDate);
+        tvStopDate  = (TextView) findViewById(R.id.tvStopDate);
+        tvStartTime = (TextView) findViewById(R.id.tvStartTime);
+        tvStopTime  = (TextView) findViewById(R.id.tvStopTime);
+        bNext     = (Button) findViewById(R.id.bGoToStopView);
         bPrevious = (Button) findViewById(R.id.bBackToStartLocation);
-        bAddTrip = (Button) findViewById(R.id.bAdd);
-        transparentStrtImageView = (ImageView) findViewById(R.id.transparent_strtImage);
-        transparentStopImageView = (ImageView) findViewById(R.id.transparent_stopImage);
-        autoCompleteTvStrt = (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewStrt);
-        autoCompleteTvStop = (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewStop);
-        strtMapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.mapFragmentStrt);
-        stopMapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.mapFragmentStop);
+        bAddTrip  = (Button) findViewById(R.id.bAdd);
+        transparentStartImageView = (ImageView) findViewById(R.id.transparent_strtImage);
+        transparentStopImageView  = (ImageView) findViewById(R.id.transparent_stopImage);
+        autoCompleteTvStart = (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewStrt);
+        autoCompleteTvStop  = (AutoCompleteTextView) findViewById(R.id.autoCompleteTextViewStop);
+        startMapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.mapFragmentStrt);
+        stopMapFragment  = (MapFragment) getFragmentManager().findFragmentById(R.id.mapFragmentStop);
         hsv = (HorizontalScrollView) findViewById(R.id.addTripHorizontalScrollView);
 
         setLayoutDimensions(); //Make the layout for start and stop parts fit the screen each
         setLatLongEditTextsInputTypeToSignedFloat();
-        setupMap(strtMapFragment); // Make start part map active
+        setupMap(startMapFragment); // Make start part map active
 
         bNext.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -155,17 +153,17 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
             @Override
             public void onClick(View view) {
                 if (allDatesAndTimesChosen())
-                    if (!dateTimeIsInFuture(tvStrtDate, tvStrtTime))
+                    if (!dateTimeIsInFuture(tvStartDate, tvStartTime))
                         if (!dateTimeIsInFuture(tvStopDate, tvStopTime))
                             if (stopDateTimeAfterStartOne())
-                                if (MapsOperations.markerStrt != null)
+                                if (MapsOperations.markerStart != null)
                                     if (MapsOperations.markerStop != null)
                                         showAddingTripMessage("Trip Details", "are you sure you want to add the following trip?" +
-                                                "\n\nStart date: " + tvStrtDate.getText().toString() +
-                                                "\n" + tvStrtTime.getText().toString() +
-                                                "\nStart location: " + MapsOperations.markerStrt.getSnippet() +
-                                                "\nLat: " + MapsOperations.markerStrt.getPosition().latitude +
-                                                "\nLon: " + MapsOperations.markerStrt.getPosition().longitude +
+                                                "\n\nStart date: " + tvStartDate.getText().toString() +
+                                                "\n" + tvStartTime.getText().toString() +
+                                                "\nStart location: " + MapsOperations.markerStart.getSnippet() +
+                                                "\nLat: " + MapsOperations.markerStart.getPosition().latitude +
+                                                "\nLon: " + MapsOperations.markerStart.getPosition().longitude +
                                                 "\n\nStop date: " + tvStopDate.getText().toString() +
                                                 "\n" + tvStopTime.getText().toString() +
                                                 "\nStop location: " + MapsOperations.markerStop.getSnippet() +
@@ -184,12 +182,12 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
             @Override
             public void onClick(View view) {
                 scrollHorizontallyToFarLeft(hsv); // move to start part
-                setupMap(strtMapFragment);    // make start map active
+                setupMap(startMapFragment);    // make start map active
             }
         });
 
 
-        tvStrtDate.setOnClickListener(new View.OnClickListener() {
+        tvStartDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 manageDatePicker(START_DATE_PICKER);
@@ -204,7 +202,7 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
         });
 
 
-        tvStrtTime.setOnClickListener(new View.OnClickListener() {
+        tvStartTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Time_PickerFragment time_PickerDialog = new Time_PickerFragment();
@@ -224,8 +222,8 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
         /** Grab addresses corresponding to the content of the autocomplete textViews from google
          * whenever the text changes in them.
          */
-        manageAutoCompleteTextView(autoCompleteTvStrt, START_LOCATION);
-        manageAutoCompleteTextView(autoCompleteTvStop, STOP_LOCATION);
+        manageAutoCompleteTextView(autoCompleteTvStart, START_LOCATION);
+        manageAutoCompleteTextView(autoCompleteTvStop , STOP_LOCATION );
 
 
          /** for latitude/longitude address entry option, when the text changes, check if the internet
@@ -233,44 +231,28 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
           * edit text of start/stop location latitude/longitude (4 listeners in total)
           * P.S. internet is needed here to get the corresponding address
           */
-        etStrtLat.addTextChangedListener(new TextWatcher() {
+        etStartLat.addTextChangedListener(new TextWatcher() {
             MapsOperations mapsOperations = new MapsOperations();
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-            }
-
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int start, int before, int count) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
+            @Override public void afterTextChanged(Editable editable) {}
+            @Override public void beforeTextChanged(CharSequence charSequence, int start, int before, int count) {}
+            @Override public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
                 if (networkIsAvailable(getBaseContext()))
-                    updateLocationOnMapWhenTextChangesFor(etStrtLat, etStrtLon, mapsOperations,
-                            mGoogleMapStrt, MapsOperations.markerStrt, START_LOCATION);
+                    updateLocationOnMapWhenTextChangesFor(etStartLat, etStartLon, mapsOperations,
+                            mGoogleMapStart, MapsOperations.markerStart, START_LOCATION);
                 else
                     showAddingTripMessage("No internet connection!", "This application needs internet connection to get locations details", 1);
             }
         });
 
 
-        etStrtLon.addTextChangedListener(new TextWatcher() {
+        etStartLon.addTextChangedListener(new TextWatcher() {
             MapsOperations mapsOperations = new MapsOperations();
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-            }
-
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int start, int before, int count) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
+            @Override public void afterTextChanged(Editable editable) {}
+            @Override public void beforeTextChanged(CharSequence charSequence, int start, int before, int count) {}
+            @Override public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
                 if (networkIsAvailable(getBaseContext()))
-                    updateLocationOnMapWhenTextChangesFor(etStrtLat, etStrtLon, mapsOperations,
-                            mGoogleMapStrt, MapsOperations.markerStrt, START_LOCATION);
+                    updateLocationOnMapWhenTextChangesFor(etStartLat, etStartLon, mapsOperations,
+                            mGoogleMapStart, MapsOperations.markerStart, START_LOCATION);
                 else
                     showAddingTripMessage("No internet connection!", "This application needs internet connection to get locations details", 1);
 
@@ -279,17 +261,9 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
 
         etStopLat.addTextChangedListener(new TextWatcher() {
             MapsOperations mapsOperations = new MapsOperations();
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-            }
-
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int start, int before, int count) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
+            @Override public void afterTextChanged(Editable editable) {}
+            @Override public void beforeTextChanged(CharSequence charSequence, int start, int before, int count) {}
+            @Override public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
                 if (networkIsAvailable(getBaseContext()))
                     updateLocationOnMapWhenTextChangesFor(etStopLat, etStopLon, mapsOperations,
                             mGoogleMapStop, MapsOperations.markerStop, STOP_LOCATION);
@@ -300,17 +274,9 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
 
         etStopLon.addTextChangedListener(new TextWatcher() {
             MapsOperations mapsOperations = new MapsOperations();
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-            }
-
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int start, int before, int count) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
+            @Override public void afterTextChanged(Editable editable) {}
+            @Override public void beforeTextChanged(CharSequence charSequence, int start, int before, int count) {}
+            @Override public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
                 if (networkIsAvailable(getBaseContext()))
                     updateLocationOnMapWhenTextChangesFor(etStopLat, etStopLon, mapsOperations,
                             mGoogleMapStop, MapsOperations.markerStop, STOP_LOCATION);
@@ -319,9 +285,9 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
             }
         });
 
-        rbStringLocationStrt = (RadioButton) findViewById(R.id.rbStrtString);
-        rbLatLonLocationStrt = (RadioButton) findViewById(R.id.rbLatLngStrt);
-        rbMapTapLocationStrt = (RadioButton) findViewById(R.id.rbMapTapStrt);
+        rbStringLocationStart = (RadioButton) findViewById(R.id.rbStartString);
+        rbLatLonLocationStart = (RadioButton) findViewById(R.id.rbLatLngStart);
+        rbMapTapLocationStart = (RadioButton) findViewById(R.id.rbMapTapStart);
         rbStringLocationStop = (RadioButton) findViewById(R.id.rbStopString);
         rbLatLonLocationStop = (RadioButton) findViewById(R.id.rbLatLngStop);
         rbMapTapLocationStop = (RadioButton) findViewById(R.id.rbMapTapStop);
@@ -329,20 +295,20 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
         disableAllEditTexts();
 
         /** For all radio buttons, when their checking status changes:
-        *  remove the previous marker on start/stop location map
-        *  and activate only the considered option for start/stop address entry
+        *   remove the previous marker on start/stop location map and
+        *   activate only the considered option for start/stop address entry
         */
-        rbStringLocationStrt.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        rbStringLocationStart.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if (b) {
-                    if (MapsOperations.markerStrt != null) MapsOperations.markerStrt.remove();
-                    MapsOperations.markerStrt = null;
-                    activate(autoCompleteTvStrt);
-                    deactivate(etStrtLat);
-                    deactivate(etStrtLon);
-                    deactivateMap(mGoogleMapStrt);
-                    goToLocationInAutoCompLeteTextView(autoCompleteTvStrt, START_LOCATION);
+                    if (MapsOperations.markerStart != null) MapsOperations.markerStart.remove();
+                    MapsOperations.markerStart = null;
+                    activate(autoCompleteTvStart);
+                    deactivate(etStartLat);
+                    deactivate(etStartLon);
+                    deactivateMap(mGoogleMapStart);
+                    goToLocationInAutoCompLeteTextView(autoCompleteTvStart, START_LOCATION);
                 }
             }
         });
@@ -363,17 +329,17 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
             }
         });
 
-        rbLatLonLocationStrt.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        rbLatLonLocationStart.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if (b) {
-                    if (MapsOperations.markerStrt != null) MapsOperations.markerStrt.remove();
-                    MapsOperations.markerStrt = null;
-                    activate(etStrtLat);
-                    activate(etStrtLon);
-                    deactivate(autoCompleteTvStrt);
-                    deactivateMap(mGoogleMapStrt);
-                    goToLocationInLatLngEditTexts(etStrtLat, etStrtLon, START_LOCATION);
+                    if (MapsOperations.markerStart != null) MapsOperations.markerStart.remove();
+                    MapsOperations.markerStart = null;
+                    activate(etStartLat);
+                    activate(etStartLon);
+                    deactivate(autoCompleteTvStart);
+                    deactivateMap(mGoogleMapStart);
+                    goToLocationInLatLngEditTexts(etStartLat, etStartLon, START_LOCATION);
                 }
             }
         });
@@ -393,17 +359,17 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
             }
         });
 
-        rbMapTapLocationStrt.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        rbMapTapLocationStart.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if (b) {
-                    if (MapsOperations.markerStrt != null) MapsOperations.markerStrt.remove();
-                    MapsOperations.markerStrt = null;
+                    if (MapsOperations.markerStart != null) MapsOperations.markerStart.remove();
+                    MapsOperations.markerStart = null;
 
-                    deactivate(etStrtLat);
-                    deactivate(etStrtLon);
-                    deactivate(autoCompleteTvStrt);
-                    transparentStrtImageView.setEnabled(true);
+                    deactivate(etStartLat);
+                    deactivate(etStartLon);
+                    deactivate(autoCompleteTvStart);
+                    transparentStartImageView.setEnabled(true);
                     tryToRetrieveLastMapClickedLocation(START_LOCATION);
                     assignAddressWhenMapIsLongClicked(START_LOCATION);
                     assignAddressWhenMyLocationButtonClicked(START_LOCATION);
@@ -413,9 +379,10 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
 
         rbMapTapLocationStop.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if (b) {
-                    if (MapsOperations.markerStop != null) MapsOperations.markerStop.remove();
+            public void onCheckedChanged(CompoundButton compoundButton, boolean radioButtonIsCheckedNow) {
+                if (radioButtonIsCheckedNow) {
+                    if (MapsOperations.markerStop != null)
+                        MapsOperations.markerStop.remove();
                     MapsOperations.markerStop = null;
                     deactivate(etStopLat);
                     deactivate(etStopLon);
@@ -428,7 +395,7 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
         });
 
         disableManualScrollingOfHorizontalScrollView(hsv);
-        enableScrollingOnImageView(transparentStrtImageView);
+        enableScrollingOnImageView(transparentStartImageView);
         enableScrollingOnImageView(transparentStopImageView);
     }
 
@@ -466,15 +433,11 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
     /** grab google addresses in a suggestions list to autocomplete the textView on text change*/
     private void manageAutoCompleteTextView(final AutoCompleteTextView autoCompleteTextView, final String tag) {
         autoCompleteTextView.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            @Override public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (networkIsAvailable(getBaseContext())) {
-                    if (tag.equals(START_LOCATION) && MapsOperations.markerStrt != null)
-                        MapsOperations.markerStrt.remove();
+                    if (tag.equals(START_LOCATION) && MapsOperations.markerStart != null)
+                        MapsOperations.markerStart.remove();
                     else if (tag.equals(STOP_LOCATION) && MapsOperations.markerStop != null)
                         MapsOperations.markerStop.remove();
                     placesTask = new PlacesTask();
@@ -484,29 +447,24 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
                             "internet connection to get locations details", 1);
                 }
             }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-            }
+            @Override public void afterTextChanged(Editable editable) {}
         });
 
         autoCompleteTextView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             MapsOperations mapsOperations = new MapsOperations();
-
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+            @Override public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 List<LatLng> coordinates = mapsOperations.locationString2Coordinates(getApplicationContext(),
                         autoCompleteTextView.getText().toString(), 10);
                 if (tag.equals(START_LOCATION)) {
-                    mapsOperations.goToLocation(mGoogleMapStrt, coordinates.get(0), DEFAULT_ZOOM, MapsOperations.markerStrt, tag,
+                    mapsOperations.goToLocation(mGoogleMapStart, coordinates.get(0), DEFAULT_ZOOM, MapsOperations.markerStart, tag,
                             autoCompleteTextView.getText().toString());
-                    tmpAutoCompStrtAddress = mapsOperations.coordinates2locationString(getBaseContext(),
+                    tmpAutoCompStartAddress = mapsOperations.latLng2AddressesList(getBaseContext(),
                             coordinates.get(0).latitude, coordinates.get(0).longitude, 1).get(0);
                 }
                 if (tag.equals(STOP_LOCATION)) {
                     mapsOperations.goToLocation(mGoogleMapStop, coordinates.get(0), DEFAULT_ZOOM, MapsOperations.markerStop, tag,
                             autoCompleteTextView.getText().toString());
-                    tmpAutoCompStopAddress = mapsOperations.coordinates2locationString(getBaseContext(),
+                    tmpAutoCompStopAddress = mapsOperations.latLng2AddressesList(getBaseContext(),
                             coordinates.get(0).latitude, coordinates.get(0).longitude, 1).get(0);
                 }
             }
@@ -522,13 +480,13 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
         if (latText.length() > 0 && lonText.length() > 0) {
             MapsOperations mapsOperations = new MapsOperations();
             LatLng latLng = new LatLng(Double.valueOf(latText), Double.valueOf(lonText));
-            List<Address> list = mapsOperations.coordinates2locationString(getBaseContext(), latLng.latitude, latLng.longitude, 1);
+            List<Address> list = mapsOperations.latLng2AddressesList(getBaseContext(), latLng.latitude, latLng.longitude, 1);
             try {
                 String snippet = list.get(0).getAddressLine(0) + ", " +
                         (list.get(0).getLocality() == null ? "" : (list.get(0).getLocality() + ", ")) +
                         list.get(0).getCountryName();
                 if (locationTag.equals(START_LOCATION))
-                    mapsOperations.goToLocation(mGoogleMapStrt, latLng, DEFAULT_ZOOM, MapsOperations.markerStrt, locationTag, snippet);
+                    mapsOperations.goToLocation(mGoogleMapStart, latLng, DEFAULT_ZOOM, MapsOperations.markerStart, locationTag, snippet);
                 if (locationTag.equals(STOP_LOCATION))
                     mapsOperations.goToLocation(mGoogleMapStop, latLng, DEFAULT_ZOOM, MapsOperations.markerStop, locationTag, snippet);
             } catch (Exception e) {
@@ -544,7 +502,7 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
             MapsOperations mapsOperations = new MapsOperations();
             List<LatLng> coordinates = mapsOperations.locationString2Coordinates(getApplicationContext(), textLocation, 10);
             if (locationTag.equals(START_LOCATION))
-                mapsOperations.goToLocation(mGoogleMapStrt, coordinates.get(0), DEFAULT_ZOOM, MapsOperations.markerStrt, locationTag, textLocation);
+                mapsOperations.goToLocation(mGoogleMapStart, coordinates.get(0), DEFAULT_ZOOM, MapsOperations.markerStart, locationTag, textLocation);
             if (locationTag.equals(STOP_LOCATION))
                 mapsOperations.goToLocation(mGoogleMapStop, coordinates.get(0), DEFAULT_ZOOM, MapsOperations.markerStop, locationTag, textLocation);
         }
@@ -558,11 +516,11 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
         if (tag.equals(START_LOCATION))
             try {
                 MapsOperations mapsOperations = new MapsOperations();
-                String snippet = tmpMapStrtAddress.getAddressLine(0) + ", "
-                        + (tmpMapStrtAddress.getLocality() == null ? "" : (tmpMapStrtAddress.getLocality() + ", "))
-                        + tmpMapStrtAddress.getCountryName();
-                mapsOperations.goToLocation(mGoogleMapStrt, new LatLng(tmpMapStrtAddress.getLatitude(), tmpMapStrtAddress.getLongitude())
-                        , DEFAULT_ZOOM, MapsOperations.markerStrt, START_LOCATION, snippet);
+                String snippet = tmpMapStartAddress.getAddressLine(0) + ", "
+                        + (tmpMapStartAddress.getLocality() == null ? "" : (tmpMapStartAddress.getLocality() + ", "))
+                        + tmpMapStartAddress.getCountryName();
+                mapsOperations.goToLocation(mGoogleMapStart, new LatLng(tmpMapStartAddress.getLatitude(), tmpMapStartAddress.getLongitude())
+                        , DEFAULT_ZOOM, MapsOperations.markerStart, START_LOCATION, snippet);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -583,7 +541,7 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
 
     private void assignAddressWhenMyLocationButtonClicked(final String tag) {
         if (tag.equals(START_LOCATION)) {
-            mGoogleMapStrt.setOnMyLocationButtonClickListener(new GoogleMap.OnMyLocationButtonClickListener() {
+            mGoogleMapStart.setOnMyLocationButtonClickListener(new GoogleMap.OnMyLocationButtonClickListener() {
                 @Override
                 public boolean onMyLocationButtonClick() {
                     return setCurrentLocationAs(START_LOCATION, new MapsOperations());
@@ -621,17 +579,17 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
             double latitude = location.getLatitude();
             double longitude = location.getLongitude();
             if (tag.equals(STOP_LOCATION)) {
-                tmpMapStopAddress = mapsOperations.coordinates2locationString(getBaseContext(), latitude, longitude, 1).get(0);
+                tmpMapStopAddress = mapsOperations.latLng2AddressesList(getBaseContext(), latitude, longitude, 1).get(0);
                 String snippet = tmpMapStopAddress.getAddressLine(0) + " ,"
                         + ((tmpMapStopAddress.getLocality() == null) ? "" : (tmpMapStopAddress.getLocality() + " ,"))
                         + tmpMapStopAddress.getCountryName();
                 mapsOperations.goToLocation(mGoogleMapStop, new LatLng(latitude, longitude), DEFAULT_ZOOM, MapsOperations.markerStop, tag, snippet);
             } else if (tag.equals(START_LOCATION)) {
-                tmpMapStrtAddress = mapsOperations.coordinates2locationString(getBaseContext(), latitude, longitude, 1).get(0);
-                String snippet = tmpMapStrtAddress.getAddressLine(0) + " ,"
-                        + ((tmpMapStrtAddress.getLocality() == null) ? "" : (tmpMapStrtAddress.getLocality() + " ,"))
-                        + tmpMapStrtAddress.getCountryName();
-                mapsOperations.goToLocation(mGoogleMapStrt, new LatLng(latitude, longitude), DEFAULT_ZOOM, MapsOperations.markerStrt, tag, snippet);
+                tmpMapStartAddress = mapsOperations.latLng2AddressesList(getBaseContext(), latitude, longitude, 1).get(0);
+                String snippet = tmpMapStartAddress.getAddressLine(0) + " ,"
+                        + ((tmpMapStartAddress.getLocality() == null) ? "" : (tmpMapStartAddress.getLocality() + " ,"))
+                        + tmpMapStartAddress.getCountryName();
+                mapsOperations.goToLocation(mGoogleMapStart, new LatLng(latitude, longitude), DEFAULT_ZOOM, MapsOperations.markerStart, tag, snippet);
             }
         } catch (SecurityException s) {
             Log.e("No Permissions Granted", "couldn't get location because permissions are not yet given");
@@ -645,17 +603,17 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
     private void assignAddressWhenMapIsLongClicked(final String tag) {
         final MapsOperations mapsOperations = new MapsOperations();
         if (tag.equals(START_LOCATION)) {
-            mGoogleMapStrt.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+            mGoogleMapStart.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
                 @Override
                 public void onMapLongClick(LatLng position) {
                     try {
                         if (networkIsAvailable(getBaseContext())) {
-                            tmpMapStrtAddress = mapsOperations.coordinates2locationString(getBaseContext(),
+                            tmpMapStartAddress = mapsOperations.latLng2AddressesList(getBaseContext(),
                                     position.latitude, position.longitude, 1).get(0);
-                            String snippet = tmpMapStrtAddress.getAddressLine(0) + " ,"
-                                    + ((tmpMapStrtAddress.getLocality() == null) ? "" : (tmpMapStrtAddress.getLocality() + " ,"))
-                                    + tmpMapStrtAddress.getCountryName();
-                            mapsOperations.goToLocation(mGoogleMapStrt, position, DEFAULT_ZOOM, MapsOperations.markerStrt, tag, snippet);
+                            String snippet = tmpMapStartAddress.getAddressLine(0) + " ,"
+                                    + ((tmpMapStartAddress.getLocality() == null) ? "" : (tmpMapStartAddress.getLocality() + " ,"))
+                                    + tmpMapStartAddress.getCountryName();
+                            mapsOperations.goToLocation(mGoogleMapStart, position, DEFAULT_ZOOM, MapsOperations.markerStart, tag, snippet);
                             Toast.makeText(getBaseContext(), position.latitude + " : " + position.longitude, Toast.LENGTH_SHORT).show();
                         }else{
                             showAddingTripMessage("No internet connection!", "This application needs internet connection to get locations details", 1);
@@ -672,7 +630,7 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
                 public void onMapLongClick(LatLng position) {
                     try {
                         if (networkIsAvailable(getBaseContext())) {
-                            tmpMapStopAddress = mapsOperations.coordinates2locationString(getBaseContext(),
+                            tmpMapStopAddress = mapsOperations.latLng2AddressesList(getBaseContext(),
                                     position.latitude, position.longitude, 1).get(0);
                             String snippet = tmpMapStopAddress.getAddressLine(0) + " ,"
                                     + ((tmpMapStopAddress.getLocality() == null) ? "" : (tmpMapStopAddress.getLocality() + " ,"))
@@ -704,10 +662,10 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
                 double dlon = format.parse(lonString).doubleValue();
                 Log.e("pos", dlat + "  " + dlon);
                 LatLng latLng = new LatLng(dlat, dlon);
-                Address address = mapsOperations.coordinates2locationString(getBaseContext(),
+                Address address = mapsOperations.latLng2AddressesList(getBaseContext(),
                         latLng.latitude, latLng.longitude, 1).get(0);
                 if (markerTitle.equals(START_LOCATION))
-                    tmpLatLonStrtAddress = address;
+                    tmpLatLonStartAddress = address;
                 else if (markerTitle.equals(STOP_LOCATION))
                     tmpLatLonStopAddress = address;
                 String snippet = address.getAddressLine(0)
@@ -739,9 +697,9 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
     /** When google Map is ready, make start/stop local Map refer to it (i.e. either the start or stop map is active at a time)
         show myLocation button on it*/
     private void whenMapReady(GoogleMap googleMap, MapFragment mapFragment) throws Exception {
-        if (mapFragment == strtMapFragment) {
-            mGoogleMapStrt = googleMap;
-            mGoogleMapStrt.setMyLocationEnabled(true);
+        if (mapFragment == startMapFragment) {
+            mGoogleMapStart = googleMap;
+            mGoogleMapStart.setMyLocationEnabled(true);
         } else if (mapFragment == stopMapFragment) {
             mGoogleMapStop = googleMap;
             mGoogleMapStop.setMyLocationEnabled(true);
@@ -794,7 +752,7 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
 
 
     private void disableAllEditTexts() {
-        View[] views = {etStrtLat,etStrtLon,etStopLat,etStopLon,autoCompleteTvStop,autoCompleteTvStrt};
+        View[] views = {etStartLat, etStartLon,etStopLat,etStopLon,autoCompleteTvStop, autoCompleteTvStart};
         for(View view : views)
             deactivate(view);
     }
@@ -833,8 +791,8 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
     }
 
     private void setLatLongEditTextsInputTypeToSignedFloat() {
-        etStrtLat.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_NUMBER_FLAG_SIGNED);
-        etStrtLon.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_NUMBER_FLAG_SIGNED);
+        etStartLat.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_NUMBER_FLAG_SIGNED);
+        etStartLon.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_NUMBER_FLAG_SIGNED);
         etStopLat.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_NUMBER_FLAG_SIGNED);
         etStopLon.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_NUMBER_FLAG_SIGNED);
     }
@@ -880,7 +838,7 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
 
     private boolean stopDateTimeAfterStartOne() {
         return  generateChosenCalendar(tvStopDate,tvStopTime).after(
-                generateChosenCalendar(tvStrtDate,tvStrtTime)     );
+                generateChosenCalendar(tvStartDate, tvStartTime)     );
     }
 
     private boolean dateTimeIsInFuture(TextView dateTextView, TextView timeTextView) {
@@ -930,8 +888,8 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
     }
 
     private boolean allDatesAndTimesChosen() {
-        return !(tvStrtTime.getText().toString().equals("Choose time") || tvStopTime.getText().toString().equals("Choose time") ||
-                 tvStrtDate.getText().toString().equals("Choose date") || tvStopDate.getText().toString().equals("Choose date") );
+        return !(tvStartTime.getText().toString().equals("Choose time") || tvStopTime.getText().toString().equals("Choose time") ||
+                 tvStartDate.getText().toString().equals("Choose date") || tvStopDate.getText().toString().equals("Choose date") );
     }
 
 
@@ -964,7 +922,7 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
             int weekDayIndex = calendar.get(Calendar.DAY_OF_WEEK)-1;
             DecimalFormat myFormatter = new DecimalFormat("00");
             if(PickerDialogForDate.dateTag.equals(START_DATE_PICKER))
-                tvStrtDate.setText(weekDays[weekDayIndex] + " : " + myFormatter.format(day) + " " + months[month]+ " " + year);
+                tvStartDate.setText(weekDays[weekDayIndex] + " : " + myFormatter.format(day) + " " + months[month]+ " " + year);
             else if (PickerDialogForDate.dateTag.equals(STOP_DATE_PICKER))
                 tvStopDate.setText(weekDays[weekDayIndex] + " : " + myFormatter.format(day) + " " + months[month]+ " " + year);
         }
@@ -979,8 +937,8 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
             Calendar calendar = Calendar.getInstance();
 
             if(timeTag.equals(START_TIME_PICKER)) {
-                mHourStrt   = calendar.get(Calendar.HOUR_OF_DAY);
-                mMinuteStrt = calendar.get(Calendar.MINUTE     );
+                mHourStart = calendar.get(Calendar.HOUR_OF_DAY);
+                mMinuteStart = calendar.get(Calendar.MINUTE     );
             }else if(timeTag.equals(STOP_TIME_PICKER)) {
                 mHourStop   = calendar.get(Calendar.HOUR_OF_DAY);
                 mMinuteStop = calendar.get(Calendar.MINUTE     );
@@ -992,7 +950,7 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
 
             switch (timeTag) {
                 case START_TIME_PICKER:
-                    return new TimePickerDialog(getActivity(), timeSetListener, mHourStrt, mMinuteStrt, true);
+                    return new TimePickerDialog(getActivity(), timeSetListener, mHourStart, mMinuteStart, true);
                 case STOP_TIME_PICKER:
                     return new TimePickerDialog(getActivity(), timeSetListener, mHourStop, mMinuteStop, true);
                 default:
@@ -1006,11 +964,11 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
         DecimalFormat myFormatter = new DecimalFormat("00");
         String twoDigitsMinute,twoDigitsHoure;
         if(Time_PickerFragment.timeTag.equals(START_TIME_PICKER)) {
-            mMinuteStrt =  minute;
-            mHourStrt = hourOfDay;
-            twoDigitsMinute = myFormatter.format(mMinuteStrt);
-            twoDigitsHoure  = myFormatter.format(mHourStrt  );
-            tvStrtTime.setText("Start time: " +twoDigitsHoure + " : " + twoDigitsMinute);
+            mMinuteStart =  minute;
+            mHourStart = hourOfDay;
+            twoDigitsMinute = myFormatter.format(mMinuteStart);
+            twoDigitsHoure  = myFormatter.format(mHourStart);
+            tvStartTime.setText("Start time: " +twoDigitsHoure + " : " + twoDigitsMinute);
         } else if(Time_PickerFragment.timeTag.equals(STOP_TIME_PICKER)) {
             mMinuteStop =  minute;
             mHourStop = hourOfDay;
@@ -1105,7 +1063,7 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
             SimpleAdapter adapter = new SimpleAdapter(getBaseContext(), result, android.R.layout.simple_list_item_1, from, to);
 
             // Setting the adapter
-            autoCompleteTvStrt.setAdapter(adapter);
+            autoCompleteTvStart.setAdapter(adapter);
             autoCompleteTvStop.setAdapter(adapter);
             adapter.notifyDataSetChanged();
         }
@@ -1128,7 +1086,7 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
             public void onClick(DialogInterface dialogInterface, int i) {
                 if(buttonsNumber == 2) {
                     pd.show();
-                    addTripToUserRecords();
+                    addTripToUserRecordsManually();
                 }
             }
         });
@@ -1148,15 +1106,16 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
 
 //===============================================================================================
     /**Adds the manually-entered trip to TripSummary table in the database*/
-    private void addTripToUserRecords() {
+    private void addTripToUserRecordsManually() {
         Trip trip = new Trip(getFinalStartAddress(),
                              getFinalStopAddress() ,
-                             generateChosenCalendar(tvStrtDate,tvStrtTime),
-                             generateChosenCalendar(tvStopDate,tvStopTime)
+                             generateChosenCalendar(tvStartDate, tvStartTime),
+                             generateChosenCalendar(tvStopDate,tvStopTime),
+                             true
         );
         new ServerProcesses(AddTripActivity.this).addTripInBackground(trip, new AfterTripTaskDone() {
             @Override
-            public void done(Trip trip) {
+            public void done() {
             }
         });
     }
@@ -1164,9 +1123,9 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
 //===============================================================================================
     /**returns the last available chosen address*/
     private Address getFinalStartAddress() {
-        return rbStringLocationStrt.isChecked()? tmpAutoCompStrtAddress :
-               rbLatLonLocationStrt.isChecked()? tmpLatLonStrtAddress   :
-               rbMapTapLocationStrt.isChecked()? tmpMapStrtAddress: null;
+        return rbStringLocationStart.isChecked()? tmpAutoCompStartAddress :
+               rbLatLonLocationStart.isChecked()? tmpLatLonStartAddress :
+               rbMapTapLocationStart.isChecked()? tmpMapStartAddress : null;
 
     }
 

@@ -6,6 +6,6 @@ package com.example.anas.anastriprecorder;
 // activity which method will be called after the server request is completed
 
 interface AfterTripTaskDone {
-    void done(Trip trip);
+    void done();
 }
 

@@ -7,6 +7,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.location.Address;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Handler;
@@ -36,8 +38,12 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
@@ -47,12 +53,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     Spinner mMapStyleSpinner;
     ArrayAdapter<CharSequence> mapStyleSpinnerArrayAdapter;
     ArrayList<Location> recordedLocationsList;
+    ArrayList<LatLng> recordedLatLngList;
+    ArrayList<Trip> wholeTripPartsList;
+    ArrayList<Polyline> subPathsPlotsList;
     ArrayList<ArrayList<Location>> wholeTripLocationsList;
     Button bRecordOrPause, bStopRecording;
     RecordingTrip recordingTripClassObject;
     final int START = 1, PAUSE = 2, STOP = 3;
     LocationManager locationManager;
     LocationListener locationListener;
+    Polyline subPathPlot;
+    Calendar startDate,stopDate;
 
     protected void onStart() {
         super.onStart();
@@ -63,7 +74,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         if (isGooglePlayAvailable()) {
             Log.e("GooglePlayServices", "available");
@@ -76,6 +86,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
             recordedLocationsList = new ArrayList<>();
             wholeTripLocationsList = new ArrayList<>();
+            subPathsPlotsList = new ArrayList<>();
+            wholeTripPartsList = new ArrayList<>();
             locationListener = new LocationListener() {
                 @Override
                 public void onLocationChanged(Location location) {
@@ -83,6 +95,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         Log.e("location ", "Latitude = " + location.getLatitude() + " | Longitude=" + location.getLongitude());
                         addMarkerAtCurrentLocation(location, 17);
                         storeCurrentLocationInList(location);
+                        recordedLatLngList = getLatLngListOfLocationsList(recordedLocationsList);
+                        if(recordedLatLngList.size()>1) {
+                            subPathPlot = drawCurrentSubPath(mGoogleMap, recordedLatLngList,Color.YELLOW,5);
+                        }
                     }
                 }
             };
@@ -91,8 +107,36 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
+    private Polyline drawCurrentSubPath(GoogleMap map, List<LatLng> latLngList , int colorCode, int width ){
+            if (subPathPlot != null)
+                subPathPlot.remove();
+            return map.addPolyline(new PolylineOptions()
+                    .addAll(latLngList)
+                    .width(width)
+                    .color(colorCode));
+    }
+
+    private void drawPreviousSubPathsIfAvailable(GoogleMap map , int colorCode, int width ){
+        if(subPathsPlotsList != null && subPathsPlotsList.size()>0)
+            for(Polyline subPathPlot : subPathsPlotsList)
+                map.addPolyline(new PolylineOptions()
+                        .addAll(subPathPlot.getPoints())
+                        .width(width)
+                        .color(colorCode));
+
+    }
+
+
     private void storeCurrentLocationInList(Location location) {
         recordedLocationsList.add(location);
+    }
+
+    ArrayList<LatLng> getLatLngListOfLocationsList(List<Location> locationList){
+        ArrayList<LatLng> latLngList = new ArrayList<>();
+        for (Location location: locationList){
+            latLngList.add(new LatLng(location.getLatitude(),location.getLongitude()));
+        }
+        return  latLngList;
     }
 
     private void addMarkerAtCurrentLocation(Location location, int zoom) {
@@ -123,6 +167,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
                 if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                    int messageCode = -1;
                     switch (bRecordOrPause.getText().toString()) {
                         case ("►"):
                             if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
@@ -132,6 +177,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 bRecordOrPause.setText(" ▌▌");
                                 bRecordOrPause.setTextSize(14);
                                 bStopRecording.setEnabled(true);
+                                messageCode = START;
                             }
                             break;
                         case (" ▌▌"):
@@ -139,9 +185,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             bRecordOrPause.setText("►");
                             bRecordOrPause.setTextSize(24);
                             bStopRecording.setEnabled(true);
+                            messageCode = PAUSE;
                     }
-                    recordingTripClassObject = new RecordingTrip(bRecordOrPause);
-                    recordingTripClassObject.configureStartPauseStopButtons();
+                    recordingTripClassObject =  new RecordingTrip(bRecordOrPause);
+                    recordingTripClassObject.StartPauseStopRecording(messageCode);
                 }
                 return false;
             }
@@ -151,7 +198,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onClick(View view) {
                 recordingTripClassObject = new RecordingTrip(bStopRecording);
-                recordingTripClassObject.configureStartPauseStopButtons();
+                recordingTripClassObject.StartPauseStopRecording(STOP);
             }
         });
 
@@ -161,6 +208,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
+        startDate = Calendar.getInstance();
+        drawPreviousSubPathsIfAvailable(mGoogleMap,Color.YELLOW,5);
         locationRequest = LocationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         locationRequest.setInterval(10000);
@@ -173,11 +222,39 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onConnectionSuspended(int i) {
-
+        //ToDo
+        if(MapsOperations.markerMain!= null)
+            MapsOperations.markerMain.remove();
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+
+
+    private void addTripPartToWholeTripPartsList(){
+        MapsOperations mapsOperations = new MapsOperations();
+        Address startAddress,stopAddress;
+        Trip tripPart;
+        try{
+            startAddress = mapsOperations.latLng2AddressesList(getBaseContext(),
+                recordedLatLngList.get(0).latitude , recordedLatLngList.get(0).longitude, 1).get(0);
+            Log.e("start Address", startAddress.getLatitude() + " " + startAddress.getLongitude());
+            stopAddress = mapsOperations.latLng2AddressesList(getBaseContext(),
+                    recordedLatLngList.get(recordedLocationsList.size()-1).latitude ,
+                    recordedLatLngList.get(recordedLocationsList.size()-1).longitude, 1).get(0);
+            Log.e("stop Address", stopAddress.getLatitude() + " " + stopAddress.getLongitude());
+            tripPart = new Trip(startAddress,stopAddress,startDate,stopDate,false);
+
+        }catch(Exception e){ // No internet service at the moment this function is called
+            tripPart = new Trip("Unknown Address","Unknown Address", recordedLatLngList.get(0),
+                                recordedLatLngList.get(recordedLocationsList.size()-1),
+                                startDate,stopDate,false);
+        }
+        wholeTripPartsList.add(tripPart);
+        startDate = null;
+        stopDate = null;
 
     }
 
@@ -203,63 +280,63 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                             showGpsOffAlertMessage(MainActivity.this);
                         } else {
+                            startDate = Calendar.getInstance();
                             googleApiClient.connect();
                         }
                         break;
                     case (STOP):
-                        showErrorMsg("Stop Recording", "Do you sure want to:" +
+                        showMessage("Stop Recording", "Do you sure want to:" +
                                 "\nstop and ignore recorded trip," +
                                 "\nstop and save recorded trip," +
                                 "\nor keep recording the trip?");
-
                         break;
                     case (PAUSE):
                         googleApiClient.disconnect();
+                        mGoogleMap.clear();
+                        stopDate =Calendar.getInstance();
                         /** we save the recorded location so far in list for tripPart
                          then we add this tripPart_locations_list into (list of lists)
                          which represents the whole trip divided into parts
                          */
-                        addPartLocationsListTowholeTripPartsList();
-                        // add function for temporary save
+                        addTripPartToWholeTripPartsList();
+
+                        //call these together
+                        addPartLocationsListToWholeTripPartsListAndClearLists();
+                        subPathsPlotsList.add(subPathPlot);
+
+                        drawPreviousSubPathsIfAvailable(mGoogleMap,Color.YELLOW,5);
+                        Log.e("wholeTripPartsSize", wholeTripPartsList.size()+"");
+                        Log.e("wholeTripLocationsPause", wholeTripLocationsList.size()+"");
                         break;
                 }
             }
         };
 
-        private void addPartLocationsListTowholeTripPartsList() {
+
+
+        private void addPartLocationsListToWholeTripPartsListAndClearLists() {
             if (recordedLocationsList.size() > 0) {
-                ArrayList<Location> tripSegment = recordedLocationsList;
-                wholeTripLocationsList.add(tripSegment);
+                wholeTripLocationsList.add(recordedLocationsList);
                 recordedLocationsList.clear();
+                recordedLatLngList.clear();
             }
         }
 
 
-        void configureStartPauseStopButtons() {
+        void StartPauseStopRecording(int messageCode) {
             Message message = new Message();
-            switch (this.mButton.getId()) {
-                case (R.id.bRecordOrPause):
-                    if (bRecordOrPause.getText().toString().equals(" ▌▌")) { // the button is yellow now due to onTouchListener
-                        message.arg1 = START;
-                        message.setTarget(handler);
-                        message.sendToTarget();
-                    } else if (bRecordOrPause.getText().toString().equals("►")) {
-                        message.arg1 = PAUSE;
-                        message.setTarget(handler);
-                        message.sendToTarget();
-                    }
-                    break;
-                case (R.id.bStop):
-                    message.arg1 = STOP;
-                    message.setTarget(handler);
-                    message.sendToTarget();
-                    break;
+            if (messageCode == START || messageCode == PAUSE ||messageCode == STOP) {
+                message.arg1 = messageCode;
+                message.setTarget(handler);
+                message.sendToTarget();
+            } else{
+                Log.e("ERROR","StartPauseStopRecording was fed by error message code");
             }
         }
     }
 
 
-    public void showErrorMsg(String title, String msg) {
+    public void showMessage(String title, String msg) {
         AlertDialog.Builder dialogueBuilder = new AlertDialog.Builder(this);
         dialogueBuilder.setTitle(title);
         dialogueBuilder.setMessage(msg);
@@ -270,17 +347,29 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         && ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     return;
                 }
-                //locationManager.removeUpdates(locationListener);
                 googleApiClient.disconnect();
                 makeRecordPauseButtonGreen();
-                Log.e("ddd", recordedLocationsList.size()+"");
                 if (recordedLocationsList.size() > 0) {
                     // Takes effect only when stop pressed while playing .. The size will be 0 if stop pressed while pausing
+                    stopDate = Calendar.getInstance();
                     wholeTripLocationsList.add(recordedLocationsList);
-                    recordedLocationsList.clear();
-                    Log.e("265 Main","cleared");
-                    // function asynctask to add trip in records
+                    recordedLatLngList = getLatLngListOfLocationsList(recordedLocationsList);
+                    addTripPartToWholeTripPartsList();
                 }
+                Log.e("last LocationsList size", recordedLocationsList.size()+"");
+                Log.e("wholeTripPartsSize 344", wholeTripPartsList.size()+"");
+                Log.e("wholeLocationListSize", wholeTripLocationsList.size()+"");
+
+                ServerProcesses serverProcesses = new ServerProcesses(MainActivity.this);
+                serverProcesses.addRecordedTripInBackground(wholeTripPartsList, new AfterTripTaskDone() {
+                    @Override
+                    public void done() {
+                        //Todo  make sure it is correct to put them here
+                        cleanAllLists();
+                        mGoogleMap.clear();
+                    }
+                });
+
             }
         });
         dialogueBuilder.setNeutralButton("Stop/Discard", new DialogInterface.OnClickListener() {
@@ -293,16 +382,34 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
                 //locationManager.removeUpdates(locationListener);
                 googleApiClient.disconnect();
+                stopDate = null;
+                startDate = null;
                 makeRecordPauseButtonGreen();
-                wholeTripLocationsList.clear();
-                recordedLocationsList.clear();
-                if (MapsOperations.markerMain!=null)
-                    MapsOperations.markerMain.remove();
+                if(recordedLocationsList != null) {
+                    wholeTripLocationsList.clear();
+                    wholeTripPartsList    .clear();
+                    recordedLocationsList .clear();
+                    recordedLatLngList    .clear();
+                    if(subPathsPlotsList!=null)
+                         subPathsPlotsList.clear();
+                }
+                mGoogleMap.clear();
+
             }
         });
         dialogueBuilder.setNegativeButton("Keep recording", null);
 
         dialogueBuilder.show();
+    }
+
+    private void cleanAllLists() {
+        Log.e("onPost Clearing", "Applied");
+        recordedLocationsList.clear();
+        recordedLatLngList   .clear();
+        if(subPathsPlotsList!=null)
+            subPathsPlotsList.clear();
+        wholeTripPartsList.clear();
+        wholeTripPartsList.clear();
     }
 
     private void makeRecordPauseButtonGreen() {

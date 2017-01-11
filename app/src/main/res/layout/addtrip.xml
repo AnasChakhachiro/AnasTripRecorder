@@ -82,7 +82,7 @@
 
                     <RadioButton
                         android:buttonTint="@android:color/background_light"
-                        android:id            = "@+id/rbStrtString"
+                        android:id            = "@+id/rbStartString"
                         android:layout_width  = "wrap_content"
                         android:layout_height = "wrap_content"
                         android:text          = "Enter Start location" />
@@ -112,7 +112,7 @@
                         android:background    = "#3C3F41" />
 
                     <RadioButton
-                        android:id            = "@+id/rbLatLngStrt"
+                        android:id            = "@+id/rbLatLngStart"
                         android:layout_width  = "wrap_content"
                         android:layout_height = "wrap_content"
                         android:text          = "Latitude and Longitude"
@@ -161,7 +161,7 @@
                         android:background    = "#3C3F41" />
 
                     <RadioButton
-                        android:id            = "@+id/rbMapTapStrt"
+                        android:id            = "@+id/rbMapTapStart"
                         android:layout_width  = "wrap_content"
                         android:layout_height = "wrap_content"
                         android:text          = "Tap location on map"

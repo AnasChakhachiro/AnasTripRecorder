@@ -3,7 +3,6 @@ package com.example.anas.anastriprecorder;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -25,6 +24,7 @@ import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -33,6 +33,7 @@ import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 import static com.example.anas.anastriprecorder.AddTripActivity.pd;
+
 /**This class manages all the processes between the application and the server*/
 class ServerProcesses {
     private static Cryptography cryptography;
@@ -43,13 +44,14 @@ class ServerProcesses {
     static LocalStorage localStorage ;
     private static final String CONTENT_TYPE = "application/x-www-form-urlencoded; charset=UTF-8";
     private AsyncTask addTripAsyncTask;
+    private AsyncTask addRecordedTripAsyncTask;
 
-     Map<String, String> connectionStatusMap;
+
+    Map<String, String> connectionStatusMap;
      {
         connectionStatusMap = new HashMap<>();
         setConnectionStatusMapToDefaultValues();
      }
-
 
     ServerProcesses(Context mContext) {
         try {
@@ -60,6 +62,7 @@ class ServerProcesses {
             e.printStackTrace();
         }
     }
+
 
 
     /** ConnectionStatus map defines whether the php files and the server are reachable and internet is available*/
@@ -135,7 +138,6 @@ class ServerProcesses {
             }
         });
         connectionStatusThread.start();
-
         try {
             connectionStatusThread.join();
             URLConnection con = url.openConnection();
@@ -190,6 +192,15 @@ class ServerProcesses {
             e.printStackTrace();
             return null;
         }
+    }
+
+    private void showMessage(String title, String msg, Context context) {
+        final AlertDialog.Builder dialogueBuilder = new AlertDialog.Builder(context);
+        dialogueBuilder.setTitle(title);
+        dialogueBuilder.setMessage(msg);
+        dialogueBuilder.setCancelable(true);
+        dialogueBuilder.setPositiveButton("OK",null);
+        dialogueBuilder.show();
     }
    //==================================================================================================================================
 
@@ -328,10 +339,10 @@ class ServerProcesses {
             Log.e("code MC=   " , connectionStatusMap.get("MCrypt Response"              ));
 
             if (connectionStatusMap.get("Network Availability").equals("NO"))
-                //Register.showErrorMsg("Error", "No network available");
+                //Register.showMessage("Error", "No network available");
                 showMessage("Error", "No network available",context);
             else if (!connectionStatusMap.get("ServerURLResponse").equals("200"))
-               // Register.showErrorMsg("Error","Server URL" + SERVER_ADDRESS + "is unreachable");
+               // Register.showMessage("Error","Server URL" + SERVER_ADDRESS + "is unreachable");
                showMessage("Error","Server URL" + SERVER_ADDRESS + "is unreachable",context);
 
             else if (!connectionStatusMap.get("FetchUserByEmail Response").equals("200"))
@@ -458,9 +469,12 @@ class ServerProcesses {
 
     /**
      * Puts manually-added Trip in TripSummary table of the data base
-     * */
+     */
     void addTripInBackground(Trip trip, AfterTripTaskDone callback){
         addTripAsyncTask = new AddTripAsyncTask(trip, callback).execute();
+
+        //The timer is used in case the response of the server takes too long without returning 200 (OK) or
+        //something else ... So, we will skip the trip addition in this case and prompt the user to add later
         Timer timer = new Timer(); // set timeout of 10 seconds to add the trip and skip trip adding if exceeded
         timer.schedule(new TimerTask() {
             @Override
@@ -483,64 +497,20 @@ class ServerProcesses {
 
     private class AddTripAsyncTask extends AsyncTask<Trip,Void,Void> {
         boolean isDataExchangeWithServerSuccessful = false;
-        Trip               trip     ;
-        AfterTripTaskDone callback ;
-        String      feedbackMessage ;
-        AddTripAsyncTask(Trip trip  , AfterTripTaskDone callback) {
+        Trip trip;
+        AfterTripTaskDone callback;
+        String feedbackMessage;
+        AddTripAsyncTask(Trip trip, AfterTripTaskDone callback) {
             this.callback = callback;
-            this.trip     = trip    ;
+            this.trip = trip;
         }
 
         @Override
         protected Void doInBackground(Trip... trips) {
-            User user = localStorage.getLoggedInUser()  ;
             try {
                 URL url = new URL(SERVER_ADDRESS + "AddTrip.php");
                 Map<String,String> dataToSend = new HashMap<>();
-                dataToSend.put("IV"          , cryptography.getIV());
-                dataToSend.put("UserID"      , cryptography.encrypt(user.getID())  );
-                dataToSend.put("Duration"    , cryptography.encrypt(trip.getDuration()));
-
-
-                // for distance, if fails to get it from google, calculate the length of the direct line between 2 locations
-                Scanner scanner = new Scanner(trip.getDistance()!=null? trip.getDistance() :
-                        findDistanceBetween(new LatLng(trip.getStartAddress().getLatitude(),trip.getStartAddress().getLongitude()),
-                                new LatLng(trip.getStopAddress().getLatitude(),trip.getStopAddress().getLongitude())));
-                dataToSend.put("Distance"    , cryptography.encrypt(String.valueOf(scanner.nextFloat())));
-                dataToSend.put("DistanceUnit", cryptography.encrypt(scanner.next()));
-
-
-                dataToSend.put("StartAddress", cryptography.encrypt(trip.getStartAddress().getAddressLine(0)+", " +
-                    (trip.getStartAddress().getLocality() == null? "":(trip.getStartAddress().getLocality()+", "))+
-                     trip.getStartAddress().getCountryName()));
-                dataToSend.put("StopAddress" , cryptography.encrypt(trip.getStopAddress().getAddressLine(0)+", "+
-                    (trip.getStopAddress().getLocality() == null? "":(trip.getStopAddress().getLocality()+", "))+
-                     trip.getStopAddress().getCountryName()));
-
-                int monthStrt = trip.getStartCalendar().get(Calendar.MONTH);
-                int monthStop = trip.getStopCalendar(). get(Calendar.MONTH);
-                int yearStrt  = trip.getStartCalendar().get(Calendar.YEAR);
-                int yearStop  = trip.getStopCalendar(). get(Calendar.YEAR);
-                DecimalFormat formatter = new DecimalFormat("00");
-
-                dataToSend.put("StartDate",cryptography.encrypt(trip.getStartCalendar().get(Calendar.DAY_OF_MONTH)+
-                        //hacking of month-year error as December is skipped
-                        ", " +( monthStrt<1 ? 12:formatter.format(monthStrt))+
-                        ", " +( monthStrt<1 ? yearStrt-1:yearStrt)));
-                dataToSend.put("StopDate" ,cryptography.encrypt(trip.getStopCalendar() .get(Calendar.DAY_OF_MONTH)+
-                        ", " +( monthStop<1 ? 12:formatter.format(monthStop))+
-                        ", " +( monthStop<1 ? yearStop-1:yearStop)));
-
-                dataToSend.put("StartTime",cryptography.encrypt(formatter.format(trip.getStartCalendar().get(Calendar.HOUR_OF_DAY ))+
-                                       " : " +formatter.format(trip.getStartCalendar().get(Calendar.MINUTE))));
-                dataToSend.put("StopTime" ,cryptography.encrypt(formatter.format(trip.getStartCalendar().get(Calendar.HOUR_OF_DAY ))+
-                                       " : " +formatter.format(trip.getStartCalendar().get(Calendar.MINUTE))));
-
-                dataToSend.put("StartLatitude" ,cryptography.encrypt(String.valueOf(trip.getStartAddress().getLatitude ())));
-                dataToSend.put("StartLongitude",cryptography.encrypt(String.valueOf(trip.getStartAddress().getLongitude())));
-                dataToSend.put("StopLatitude"  ,cryptography.encrypt(String.valueOf(trip.getStopAddress() .getLatitude ())));
-                dataToSend.put("StopLongitude" ,cryptography.encrypt(String.valueOf(trip.getStopAddress() .getLongitude())));
-
+                setTripDataToBeSent(trip , dataToSend);
                 HttpURLConnection  http = setHttpPostRequest(url, dataToSend);
                 JSONObject jObj = postAndGetJasonResponse(http);
 
@@ -556,56 +526,197 @@ class ServerProcesses {
             return null;
         }
 
-        /** Used to find direct distance between two locations (if driving distance is null by google)*/
-        String findDistanceBetween(LatLng start, LatLng stop){
-            float[] results = new float[1];
-            Location.distanceBetween(start.latitude, start.longitude,
-                    stop.latitude, stop.longitude, results);
-            return (results[0]>1000) ? (results[0]/1000+" Km") :  (results[0] + " m");
-        }
-
         @Override
         protected void onPostExecute(Void aVoid) {
-//            Log.e("code NA= "  , connectionStatusMap.get("Network Availability"));
-//            Log.e("code SR= "  , connectionStatusMap.get("ServerURLResponse"));
-//            Log.e("code FUD= " , connectionStatusMap.get("FetchUserData Response"));
-//            Log.e("code FUBE= ", connectionStatusMap.get("FetchUserByEmail Response"));
-//            Log.e("code ROU= " , connectionStatusMap.get("RegisterOrUpdateUser Response"));
-//            Log.e("code MC= "  , connectionStatusMap.get("MCrypt Response"));
-//            Log.e("code AT= "  , connectionStatusMap.get("AddTrip Response"));
-
-            String message = "Trip is added";
-            if (connectionStatusMap.get("Network Availability").equals("NO")) {
-                showMessage("Error", "No network available", context);
-                message = "Failed to add trip";
-            } else if (!connectionStatusMap.get("ServerURLResponse").equals("200")) {
-                showMessage("Error", "Server URL" + SERVER_ADDRESS + "is unreachable", context);
-                message = "Failed to add trip";
-            } else if (!connectionStatusMap.get("AddTrip Response").equals("200")) {
-                showMessage("Error", "URL of file AddTrip.php is unreachable", context);
-                message = "Failed to add trip";
-            } else if (!connectionStatusMap.get("MCrypt Response").equals("200")) {
-                showMessage("Error", "URL of file MCrypt.php is unreachable", context);
-                message = "Failed to add trip";
-            } else if (!isDataExchangeWithServerSuccessful) {
-                showMessage("Error", "Error while exchanging data with the server", context);
-                message = "Failed to add trip";
-            }
-
+            String message = showServerRelatedError(isDataExchangeWithServerSuccessful);
             pd.dismiss();
             Toast.makeText(context,message,Toast.LENGTH_LONG).show();
             super.onPostExecute(aVoid);
         }
+    }
 
+
+    private void setTripDataToBeSent(Trip trip, Map<String,String> dataToSend) {
+        try {
+            User user = localStorage.getLoggedInUser();
+            dataToSend.clear();
+            dataToSend.put("IV", cryptography.getIV());
+            dataToSend.put("UserID", cryptography.encrypt(user.getID()));
+            dataToSend.put("Duration", cryptography.encrypt(trip.getDuration()));
+
+
+            // for distance, if fails to get it from google, calculate the length of the direct line between 2 locations
+            Scanner scanner = new Scanner(trip.getDistance() != null ? trip.getDistance() :
+                    trip.findDistanceBetween(new LatLng(trip.getStartAddress().getLatitude(), trip.getStartAddress().getLongitude()),
+                            new LatLng(trip.getStopAddress().getLatitude(), trip.getStopAddress().getLongitude())));
+            dataToSend.put("Distance", cryptography.encrypt(String.valueOf(scanner.nextFloat())));
+            dataToSend.put("DistanceUnit", cryptography.encrypt(scanner.next()));
+
+            if(trip.getStartAddress()!= null) {
+                dataToSend.put("StartAddress", cryptography.encrypt(trip.getStartAddress().getAddressLine(0) + ", " +
+                        (trip.getStartAddress().getLocality() == null ? "" : (trip.getStartAddress().getLocality() + ", ")) +
+                        trip.getStartAddress().getCountryName()));
+            }else {
+                dataToSend.put("StartAddress", cryptography.encrypt(trip.getStartAddressString()));
+            }
+
+            if(trip.getStopAddress()!= null) {
+                dataToSend.put("StopAddress", cryptography.encrypt(trip.getStopAddress().getAddressLine(0) + ", " +
+                        (trip.getStopAddress().getLocality() == null ? "" : (trip.getStopAddress().getLocality() + ", ")) +
+                        trip.getStopAddress().getCountryName()));
+            }else {
+                dataToSend.put("StopAddress", cryptography.encrypt(trip.getStopAddressString()));
+            }
+
+            //if manually added we don't need Trip.start/stopMonth variables. If recorded, we use them
+            int monthStart = trip.getStartMonth()<0 ? trip.getStartCalendar().get(Calendar.MONTH):trip.getStartMonth();
+            int monthStop =  trip.getStopMonth ()<0 ? trip.getStopCalendar() .get(Calendar.MONTH):trip.getStopMonth ();
+            int yearStart = trip.getStartCalendar().get(Calendar.YEAR);
+            int yearStop = trip.getStopCalendar().get(Calendar.YEAR);
+
+            DecimalFormat formatter = new DecimalFormat("00");
+            dataToSend.put("StartDate", cryptography.encrypt(trip.getStartCalendar().get(Calendar.DAY_OF_MONTH) +
+                    //hacking of month-year error as December is skipped
+                    ", " + (monthStart < 1 ? 12 : formatter.format(monthStart)) +
+                    ", " + (monthStart < 1 ? yearStart - 1 : yearStart)));
+            dataToSend.put("StopDate", cryptography.encrypt(trip.getStopCalendar().get(Calendar.DAY_OF_MONTH) +
+                    ", " + (monthStop < 1 ? 12 : formatter.format(monthStop)) +
+                    ", " + (monthStop < 1 ? yearStop - 1 : yearStop)));
+
+            dataToSend.put("StartTime", cryptography.encrypt(formatter.format(trip.getStartCalendar().get(Calendar.HOUR_OF_DAY)) +
+                    " : " + formatter.format(trip.getStartCalendar().get(Calendar.MINUTE))));
+            dataToSend.put("StopTime", cryptography.encrypt(formatter.format(trip.getStartCalendar().get(Calendar.HOUR_OF_DAY)) +
+                    " : " + formatter.format(trip.getStartCalendar().get(Calendar.MINUTE))));
+
+
+//            Log.e("start time",(formatter.format(trip.getStartCalendar().get(Calendar.HOUR_OF_DAY)) +
+//                    " : " + formatter.format(trip.getStartCalendar().get(Calendar.MINUTE))));
+//            Log.e("stop time",(formatter.format(trip.getStartCalendar().get(Calendar.HOUR_OF_DAY)) +
+//                    " : " + formatter.format(trip.getStartCalendar().get(Calendar.MINUTE))));
+//            Log.e("start date",(trip.getStartCalendar().get(Calendar.DAY_OF_MONTH) +
+//                    //hacking of month-year error as December is skipped
+//                    ", " + (monthStart < 1 ? 12 : formatter.format(monthStart)) +
+//                    ", " + (monthStart < 1 ? yearStart - 1 : yearStart)));
+//            Log.e("stop date",(trip.getStopCalendar().get(Calendar.DAY_OF_MONTH) +
+//                    ", " + (monthStop < 1 ? 12 : formatter.format(monthStop)) +
+//                    ", " + (monthStop < 1 ? yearStop - 1 : yearStop)));
+
+            if(trip.getStartAddress()!= null) {
+                dataToSend.put("StartLatitude", cryptography.encrypt(String.valueOf(trip.getStartAddress().getLatitude())));
+            }else{
+                dataToSend.put("StartLatitude", cryptography.encrypt(String.valueOf(trip.getStartLatLng().latitude)));
+            }
+
+            if(trip.getStartAddress()!= null) {
+                dataToSend.put("StartLongitude", cryptography.encrypt(String.valueOf(trip.getStartAddress().getLongitude())));
+            }else{
+                dataToSend.put("StartLongitude", cryptography.encrypt(String.valueOf(trip.getStartLatLng().longitude)));
+            }
+
+            if(trip.getStopAddress()!= null) {
+                dataToSend.put("StopLatitude", cryptography.encrypt(String.valueOf(trip.getStopAddress().getLatitude())));
+            }else{
+                dataToSend.put("StopLatitude", cryptography.encrypt(String.valueOf(trip.getStopLatLng().latitude)));
+            }
+
+            if(trip.getStopAddress()!= null) {
+                dataToSend.put("StopLongitude", cryptography.encrypt(String.valueOf(trip.getStopAddress().getLongitude())));
+            }else{
+                dataToSend.put("StopLongitude", cryptography.encrypt(String.valueOf(trip.getStopLatLng().longitude)));
+            }
+
+            dataToSend.put("ManuallyAdded", cryptography.encrypt(String.valueOf(trip.isManuallyAdded())));
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
     //==================================================================================================================================
 
-     private void showMessage(String title, String msg, Context context) {
-         final AlertDialog.Builder dialogueBuilder = new AlertDialog.Builder(context);
-         dialogueBuilder.setTitle(title);
-         dialogueBuilder.setMessage(msg);
-         dialogueBuilder.setCancelable(true);
-         dialogueBuilder.setPositiveButton("OK",null);
-         dialogueBuilder.show();
+    /**
+     * Puts manually-added Trip in TripSummary table of the data base
+     */
+    void addRecordedTripInBackground(ArrayList<Trip> tripParts_List, AfterTripTaskDone callback){
+        //noinspection unchecked
+        addRecordedTripAsyncTask = new AddRecordedTripAsyncTask(tripParts_List, callback).execute();
     }
+
+    private class AddRecordedTripAsyncTask extends AsyncTask<ArrayList<Trip>,Void,Void> {
+        boolean isDataExchangeWithServerSuccessful = false;
+        ArrayList<Trip> tripPartsList;
+        AfterTripTaskDone callback;
+        String feedbackMessage;
+
+        AddRecordedTripAsyncTask(ArrayList<Trip> tripPartsList, AfterTripTaskDone callback) {
+            this.callback = callback;
+            this.tripPartsList = tripPartsList;
+        }
+
+        @SafeVarargs
+        @Override
+        protected final Void doInBackground(ArrayList<Trip>... tripPartsLists) {
+            try {
+                URL url = new URL(SERVER_ADDRESS + "AddRecordedTrip.php");
+                Map<String, String> dataToSend = new HashMap<>();
+                int tripPartID = 0;
+                for (Trip tripPart : tripPartsList) {
+                    tripPartID++;
+                    setTripDataToBeSent(tripPart,dataToSend);
+                    dataToSend.put("TripPartID",String.valueOf(tripPartID));
+                    final HttpURLConnection http = setHttpPostRequest(url, dataToSend);
+                    Thread th = new Thread(){
+                        @Override
+                        public void run() {
+                            JSONObject jObj = postAndGetJasonResponse(http);
+                            if (jObj != null) {
+                                try {
+                                    cryptography.setIV(jObj.getString("IV"));
+                                    feedbackMessage = cryptography.decrypt(jObj.getString("status"));
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            isDataExchangeWithServerSuccessful = true;
+                        }
+                    };
+                    th.start();
+                    th.join();
+                }
+            }catch(Exception e){
+                isDataExchangeWithServerSuccessful = false;
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            callback.done();
+            String message = showServerRelatedError(isDataExchangeWithServerSuccessful);
+           // pd.dismiss();
+            Toast.makeText(context,message,Toast.LENGTH_LONG).show();
+            super.onPostExecute(aVoid);
+        }
+    }
+
+    private String showServerRelatedError(boolean isDataExchangeWithServerSuccessful) {
+        String message = "Failed to add trip";
+        if (connectionStatusMap.get("Network Availability").equals("NO")) {
+            showMessage("Error", "No network available", context);
+        } else if (!connectionStatusMap.get("ServerURLResponse").equals("200")) {
+            showMessage("Error", "Server URL" + SERVER_ADDRESS + "is unreachable", context);
+        } else if (!connectionStatusMap.get("AddTrip Response").equals("200")) {
+            showMessage("Error", "URL of file AddTrip.php is unreachable", context);
+        } else if (!connectionStatusMap.get("MCrypt Response").equals("200")) {
+            showMessage("Error", "URL of file MCrypt.php is unreachable", context);
+        } else if (!isDataExchangeWithServerSuccessful) {
+            showMessage("Error", "Error while exchanging data with the server", context);
+        }else if (!connectionStatusMap.get("AddRecordedTrip Response").equals("200")) {
+            showMessage("Error", "URL of file AddRecordedTrip.php is unreachable", context);
+        }else{
+            message = "Trip is added";
+        }
+        return message;
+    }
+    //==================================================================================================================================
+
 }

@@ -6,7 +6,7 @@ import android.util.SparseArray;
 /*This class is used for enumeration of the php files on the server side */
 class  ServerFiles {
 
-    enum PhpFile{ file1 ,file2, file3 , file4, file5 }
+    enum PhpFile{ file1 ,file2, file3 , file4, file5, file6 }
 
     private final static SparseArray<String> serverFilesMap;
     static {
@@ -16,6 +16,8 @@ class  ServerFiles {
         serverFilesMap.put(3, "RegisterOrUpdateUser.php");
         serverFilesMap.put(4, "MCrypt.php");
         serverFilesMap.put(5, "AddTrip.php");
+        serverFilesMap.put(6, "AddRecordedTrip.php");
+
 
     }
 
@@ -32,6 +34,8 @@ class  ServerFiles {
                 return serverFilesMap.get(4);
             case file5 :
                 return serverFilesMap.get(5);
+            case file6 :
+                return serverFilesMap.get(6);
             default    :
                 return "Invalid file option";
         }
