@@ -1106,16 +1106,23 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
 
 //===============================================================================================
     /**Adds the manually-entered trip to TripSummary table in the database*/
+    Trip trip;
     private void addTripToUserRecordsManually() {
-        Trip trip = new Trip(getFinalStartAddress(),
-                             getFinalStopAddress() ,
-                             generateChosenCalendar(tvStartDate, tvStartTime),
-                             generateChosenCalendar(tvStopDate,tvStopTime),
-                             true
+         trip = new Trip(getFinalStartAddress(),
+                         getFinalStopAddress() ,
+                         generateChosenCalendar(tvStartDate, tvStartTime),
+                         generateChosenCalendar(tvStopDate,tvStopTime),
+                         true
         );
-        new ServerProcesses(AddTripActivity.this).addTripInBackground(trip, new AfterTripTaskDone() {
+        final ServerProcesses serverProcesses = new ServerProcesses(AddTripActivity.this);
+        serverProcesses.fetchTripIDsInBackground(ServerProcesses.localStorage.getLoggedInUser(), new AfterTripIDsFetchingTaskDone() {
             @Override
-            public void done() {
+            public void done(int tripID) {
+                trip.setTripID(tripID);
+                serverProcesses.addTripInBackground(trip, new AfterTripAddingTaskDone() {
+                    @Override
+                    public void done() {}
+                });
             }
         });
     }

@@ -1,5 +1,8 @@
 <?php
-
+Define ('dbUser','');
+Define ('dbHost','');
+Define ('dbName','');
+Define ('dbPW','');
 $con = mysqli_connect(dbHost,dbUser,dbPW);
 if(!$con){
 	die("db Connection failed :" . mysqli_connect_error($con));
@@ -9,8 +12,9 @@ $dbSelected = mysqli_select_db($con,dbName);
 if(!$dbSelected){
 	die("db Selection failed :" . mysqli_error($con));
 	exit();
-} 
+}
 $UserID = $_POST["UserID"];
+$TripID = $_POST["TripID"];
 $Distance = $_POST["Distance"];
 $StartAddress= $_POST["StartAddress"];
 $StopAddress = $_POST["StopAddress"];
@@ -44,15 +48,8 @@ $dStopLongitude= $d->decrypt($StopLongitude);
 $dDistanceUnit = $d->decrypt($DistanceUnit);
 $dDuration= $d->decrypt($Duration);
 $dManuallyAdded = $d->decrypt($ManuallyAdded);
-$query = array();
-$query = mysqli_query($con,"SELECT * FROM TripSummary WHERE UserID = '".$dUserID."' ");
-if (mysqli_num_rows($query) > 0){
-$TripId = mysqli_num_rows($query)+1;
-}else{
-$TripId = 1;
-}
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-$statement = "INSERT INTO TripSummary (UserID,TripID,StartAddress,TripStartLatitude,TripStartLongitude,TripStartDate,TripStartTime,StopAddress,TripStopLatitude,TripStopLongitude,TripStopDate,TripStopTime,TripDuration,TripDistance,DistanceUnit,ManuallyAdded)Values('".$dUserID."','".(int)$TripId."','".$dStartAddress."','".$dStartLatitude."','".$dStartLongitude."','".$dStartDate."','".$dStartTime."','".$dStopAddress."','".$dStopLatitude."','".$dStopLongitude."','".$dStopDate."','".$dStopTime."','".$dDuration."','".$dDistance."','".$dDistanceUnit."','".$dManuallyAdded."')";
+$statement = "INSERT INTO TripSummary (UserID,TripID,StartAddress,TripStartLatitude,TripStartLongitude,TripStartDate,TripStartTime,StopAddress,TripStopLatitude,TripStopLongitude,TripStopDate,TripStopTime,TripDuration,TripDistance,DistanceUnit,ManuallyAdded)Values('".$dUserID."','".$TripID."','".$dStartAddress."','".$dStartLatitude."','".$dStartLongitude."','".$dStartDate."','".$dStartTime."','".$dStopAddress."','".$dStopLatitude."','".$dStopLongitude."','".$dStopDate."','".$dStopTime."','".$dDuration."','".$dDistance."','".$dDistanceUnit."','".$dManuallyAdded."')";
 }
 $result = mysqli_query($con,$statement) or trigger_error("Query Error".mysqli_error($con));
 mysqli_close($con)

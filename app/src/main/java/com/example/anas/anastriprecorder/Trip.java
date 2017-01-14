@@ -29,6 +29,7 @@ class Trip {
     private LatLng mStartLatLng,mStopLatLng;
     private boolean mIsManuallyAdded;
     private int startMonth = -1 , stopMonth = -1;
+    private int tripID;
 
     Trip(Address startAddress, Address stopAddress, Calendar startCalendar, Calendar stopCalendar, boolean isManuallyAdded){
         this.mStartCalendar=startCalendar;
@@ -56,27 +57,27 @@ class Trip {
         this.mStartCalendar=startDate;
         this.mStopCalendar = stopDate;
         this.mStartAddressString = startAddress;
-        this.mStopAddressString = stopAddress;
+        this.mStopAddressString  = stopAddress ;
         this.mIsManuallyAdded = isManuallyAdded;
         this.mStartLatLng = startLatLng;
-        this.mStopLatLng = stopLatLng;
+        this.mStopLatLng  = stopLatLng ;
         Map<TimeUnit, Long> timeDifference = computeDuration(startDate.getTime(), stopDate.getTime());
-        this.duration = timeDifference.get(TimeUnit.DAYS) + " DAYS\n" +
-                timeDifference.get(TimeUnit.HOURS) + " HOURS\n" +
-                timeDifference.get(TimeUnit.MINUTES) + " MINUTES";
-        this.distance = findDistanceBetween(startLatLng, stopLatLng);
+        this.duration = timeDifference.get(TimeUnit.DAYS)    + " DAYS\n" +
+                        timeDifference.get(TimeUnit.HOURS)   + " HOURS\n"+
+                        timeDifference.get(TimeUnit.MINUTES) + " MINUTES";
+        this.distance = new MapsOperations().findDistanceBetween(startLatLng, stopLatLng);
         if(!isManuallyAdded) {// needed to unify the way of hacking December bug in addTrip and Main activities
             this.startMonth = mStartCalendar.get(Calendar.MONTH) + 1;
-            this.stopMonth = mStopCalendar.get(Calendar.MONTH) + 1;
+            this.stopMonth  = mStopCalendar.get(Calendar.MONTH)  + 1;
         }
     }
 
     private static Map<TimeUnit,Long> computeDuration(Date date1, Date date2) {
-        long diffInMillies = date2.getTime() - date1.getTime();
+        long diffInMillis = date2.getTime() - date1.getTime();
         List<TimeUnit> units = new ArrayList<>(EnumSet.allOf(TimeUnit.class));
         Collections.reverse(units);
         Map<TimeUnit,Long> result = new LinkedHashMap<>();
-        long millisRest = diffInMillies;
+        long millisRest = diffInMillis;
         for ( TimeUnit unit : units ) {
             long diff = unit.convert(millisRest,TimeUnit.MILLISECONDS);
             long diffInMillisForUnit = unit.toMillis(diff);
@@ -85,16 +86,6 @@ class Trip {
         }
         return result;
     }
-
-
-    /** Used to find direct distance between two locations (if driving distance is null by google)*/
-    String findDistanceBetween(LatLng start, LatLng stop){
-        float[] results = new float[1];
-        Location.distanceBetween(start.latitude, start.longitude,
-                stop.latitude, stop.longitude, results);
-        return (results[0]>1000) ? (results[0]/1000+" Km") :  (results[0] + " m");
-    }
-
 
     private String parsedDistance;
     private String getDistanceFromGoogle(final double lat1, final double lon1, final double lat2, final double lon2) {
@@ -166,5 +157,13 @@ class Trip {
     }
 
     boolean isManuallyAdded() {return this.mIsManuallyAdded;}
+
+    void setTripID(int tripID) {
+        this.tripID = tripID;
+    }
+
+    int getTripID() {
+        return tripID;
+    }
 }
 

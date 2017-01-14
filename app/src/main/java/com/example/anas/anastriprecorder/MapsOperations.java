@@ -3,6 +3,7 @@ package com.example.anas.anastriprecorder;
 import android.content.Context;
 import android.location.Address;
 import android.location.Geocoder;
+import android.location.Location;
 import android.util.Log;
 import android.widget.Toast;
 import com.google.android.gms.maps.CameraUpdate;
@@ -42,8 +43,16 @@ class MapsOperations  {
     }
 
 
+    /** Used to find direct distance between two locations (if driving distance is null by google)*/
+    String findDistanceBetween(LatLng start, LatLng stop){
+        float[] results = new float[1];
+        Location.distanceBetween(start.latitude, start.longitude,
+                stop.latitude, stop.longitude, results);
+        return (results[0]>1000) ? (results[0]/1000+" Km") :  (results[0] + " m");
+    }
 
-    void  goToLocation(GoogleMap gm, LatLng latLng, int zoom, Marker marker, String markerTitle, String markerSnippet) {
+
+    void  goToLocation(GoogleMap gm, LatLng latLng, float zoom, Marker marker, String markerTitle, String markerSnippet) {
 
         if(marker == MapsOperations.markerStart) {
             if (MapsOperations.markerStart != null)
