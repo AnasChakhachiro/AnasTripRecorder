@@ -3,6 +3,7 @@ package com.example.anas.anastriprecorder;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -64,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     LocationListener locationListener;
     Polyline subPathPlot;
     Calendar startDate, stopDate;
+    static ProgressDialog pd;
 
     protected void onStart() {
         super.onStart();
@@ -76,7 +78,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (isGooglePlayAvailable()) {
-            Log.e("GooglePlayServices", "available");
             setContentView(R.layout.activity_main);
             initMap();
             setupMapStyleSpinner(R.id.mapStyleSpinner);
@@ -244,11 +245,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         try{
             startAddress = mapsOperations.latLng2AddressesList(getBaseContext(),
                 recordedLatLngList.get(0).latitude , recordedLatLngList.get(0).longitude, 1).get(0);
-            Log.e("start Address", startAddress.getLatitude() + " " + startAddress.getLongitude());
             stopAddress = mapsOperations.latLng2AddressesList(getBaseContext(),
                     recordedLatLngList.get(recordedLocationsList.size()-1).latitude ,
                     recordedLatLngList.get(recordedLocationsList.size()-1).longitude, 1).get(0);
-            Log.e("stop Address", stopAddress.getLatitude() + " " + stopAddress.getLongitude());
             tripPart = new Trip(startAddress,stopAddress,startDate,stopDate,false);
 
         }catch(Exception e){ // No internet service at the moment this function is called
@@ -309,8 +308,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         subPathsPlotsList.add(subPathPlot);
 
                         drawPreviousSubPathsIfAvailable(mGoogleMap,Color.YELLOW,5);
-                        Log.e("wholeTripPartsSize", wholeTripPartsList.size()+"");
-                        Log.e("wholeTripLocationsPause", wholeTripLocationsList.size()+"");
                         break;
                 }
             }
@@ -344,6 +341,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         final AlertDialog.Builder dialogueBuilder = new AlertDialog.Builder(this);
         dialogueBuilder.setTitle(title);
         dialogueBuilder.setMessage(msg);
+        pd = new ProgressDialog(this,R.style.MyTheme);
+        pd.setCancelable(false);
+        pd.setProgressStyle(android.R.style.Widget_ProgressBar_Large);
         dialogueBuilder.setPositiveButton("Stop/Save", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(final DialogInterface dialogInterface, int i) {
@@ -378,17 +378,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         recordedLatLngList = getLatLngListOfLocationsList(recordedLocationsList);
                         addTripPartToWholeTripPartsList();
                     }
-                    Log.e("last LocationsList size", recordedLocationsList.size() + "");
-                    Log.e("wholeTripPartsSize 344", wholeTripPartsList.size() + "");
-                    Log.e("wholeLocationListSize", wholeTripLocationsList.size() + "");
-
+                    pd.show();
                     serverProcesses.fetchTripIDsInBackground(userLocalStore.getLoggedInUser(), new AfterTripIDsFetchingTaskDone() {
                         @Override
                         public void done(int tripID) {
                             for(Trip trip:wholeTripPartsList){
                                 trip.setTripID(tripID);
-                                Log.e("returned trip ID",tripID+"");
-                                Log.e("After change" , wholeTripPartsList.get(0).getTripID()+"");
                             }
                             serverProcesses.addRecordedTripInBackground(wholeTripPartsList, new AfterTripAddingTaskDone() {
                                 @Override
@@ -437,7 +432,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     private void cleanAllLists() {
-        Log.e("onPost Clearing", "Applied");
         recordedLocationsList.clear();
         recordedLatLngList   .clear();
         if(subPathsPlotsList!=null)

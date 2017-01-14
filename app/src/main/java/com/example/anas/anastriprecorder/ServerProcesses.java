@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
-import static com.example.anas.anastriprecorder.AddTripActivity.pd;
 
 /**This class manages all the processes between the application and the server*/
 class ServerProcesses {
@@ -72,8 +71,6 @@ class ServerProcesses {
             connectionStatusMap.put(phpFileName.substring(0,phpFileName.length()-4) + " Response", "0");
         }
     }
-
-
 
     private String showServerRelatedError(boolean isDataExchangeWithServerSuccessful) {
         String message = "Failed to add trip";
@@ -460,12 +457,13 @@ class ServerProcesses {
 
         //The timer is used in case the response of the server takes too long without returning 200 (OK) or
         //something else ... So, we will skip the trip addition in this case and prompt the user to add later
-        Timer timer = new Timer(); // set timeout of 10 seconds to add the trip and skip trip adding if exceeded
+        //ToDo
+        /* Timer timer = new Timer(); // set timeout of 10 seconds to add the trip and skip trip adding if exceeded
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                if(pd.isShowing()) {
-                    pd.dismiss();
+                if(AddTripActivity.pd.isShowing()) {
+                    AddTripActivity.pd.dismiss();
                     addTripAsyncTask.cancel(true);
                     addTripAsyncTask = null;
                     Handler handler = new Handler(Looper.getMainLooper());
@@ -477,7 +475,7 @@ class ServerProcesses {
                                         },100);
                 }
             }
-        },ServerProcesses.CONN_TIME_OUT);
+        },ServerProcesses.CONN_TIME_OUT);*/
     }
 
     private class AddTripAsyncTask extends AsyncTask<Trip,Void,Void> {
@@ -514,8 +512,19 @@ class ServerProcesses {
 
         @Override
         protected void onPostExecute(Void aVoid) {
+            try {// if trip is added in TripSummary from manual adding
+                AddTripActivity.pd.dismiss();
+            }catch (Exception e){
+                e.getMessage();
+            }
+
+            try {// if summary of detailed trip being added
+                MainActivity.pd.dismiss();
+            }catch (Exception e){
+                e.getMessage();
+            }
+
             String message = showServerRelatedError(isDataExchangeWithServerSuccessful);
-            pd.dismiss();
             Toast.makeText(context,message,Toast.LENGTH_LONG).show();
             super.onPostExecute(aVoid);
         }
@@ -654,6 +663,17 @@ class ServerProcesses {
                     th.start();
                     th.join();
                 }
+                Trip tripSummary = new Trip(tripPartsList.get(0).getStartAddressString(),
+                                            tripPartsList.get(tripPartsList.size()-1).getStopAddressString(),
+                                            tripPartsList.get(0).getStartLatLng(),
+                                            tripPartsList.get(tripPartsList.size()-1).getStopLatLng(),
+                                            tripPartsList.get(0).getStartCalendar(),
+                                            tripPartsList.get(tripPartsList.size()-1).getStopCalendar(),
+                                            false);
+                tripSummary.setTripID(tripPartsList.get(0).getTripID());
+                addTripInBackground(tripSummary, new AfterTripAddingTaskDone() {
+                    @Override public void done() {}
+                });
             }catch(Exception e){
                 isDataExchangeWithServerSuccessful = false;
                 e.printStackTrace();
@@ -704,10 +724,7 @@ class ServerProcesses {
                 if (jObj.length() == 3) {
                     cryptography.setIV(jObj.getString("IV"));
                     int maxTripDetailsID = Integer.valueOf(jObj.getString("MaxTripDetailsID"));
-                    Log.e("maxTripDetailsID",maxTripDetailsID+"" );
                     int maxTripSummaryID = Integer.valueOf(jObj.getString("MaxTripSummaryID"));
-                    Log.e("maxTripSummaryID",maxTripSummaryID+"" );
-
                     returnedTripIDs = new int[] {maxTripDetailsID, maxTripSummaryID} ;
                     isDataExchangeWithServerSuccessful = true;
                 }else{
@@ -730,7 +747,6 @@ class ServerProcesses {
             super.onPostExecute(returnedTripIDs);
         }
     }
-
     //==================================================================================================================================
 
 }

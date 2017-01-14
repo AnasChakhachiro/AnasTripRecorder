@@ -660,7 +660,6 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
                 NumberFormat format = NumberFormat.getInstance(Locale.US);
                 double dlat = format.parse(latString).doubleValue();
                 double dlon = format.parse(lonString).doubleValue();
-                Log.e("pos", dlat + "  " + dlon);
                 LatLng latLng = new LatLng(dlat, dlon);
                 Address address = mapsOperations.latLng2AddressesList(getBaseContext(),
                         latLng.latitude, latLng.longitude, 1).get(0);
@@ -860,9 +859,6 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
         yearChosen  = (monthChosen < 1 ? yearChosen - 1 : yearChosen);
         monthChosen = (monthChosen < 1 ? 12 : monthChosen);
 
-        Log.e("current calendar", monthCurrent + " / " + yearCurrent);
-        Log.e("chosen calendar", monthChosen + " / " + yearChosen);
-
         // return true if chosen date/time is fully after current date/time (returns false if equal)
         return yearChosen > yearCurrent ||
                 yearChosen >= yearCurrent && (monthChosen > monthCurrent
@@ -1018,7 +1014,6 @@ public class AddTripActivity extends FragmentActivity implements TimePickerDialo
             }catch(Exception e){
                 Log.d("Background Task",e.toString());
             }
-            //Log.e("data is: " , data);
             return data;
         }
 

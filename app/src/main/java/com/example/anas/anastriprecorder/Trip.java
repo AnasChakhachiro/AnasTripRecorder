@@ -36,6 +36,14 @@ class Trip {
         this.mStopCalendar = stopCalendar;
         this.mStartAddress = startAddress;
         this.mStopAddress = stopAddress;
+        this.mStartAddressString = startAddress.getAddressLine(0) + ", " +
+                (startAddress.getLocality() == null ? "" : (startAddress.getLocality() + ", ")) +
+                startAddress.getCountryName();
+        this.mStopAddressString = stopAddress.getAddressLine(0) + ", " +
+                (stopAddress.getLocality() == null ? "" : (stopAddress.getLocality() + ", ")) +
+                stopAddress.getCountryName();
+        this.mStartLatLng = new LatLng(this.mStartAddress.getLatitude(),this.mStartAddress.getLongitude());
+        this.mStopLatLng  = new LatLng(this.mStopAddress.getLatitude(),this.mStopAddress.getLongitude());
         this.mIsManuallyAdded = isManuallyAdded;
         Map<TimeUnit, Long> timeDifference = computeDuration(startCalendar.getTime(), stopCalendar.getTime());
         this.duration = timeDifference.get(TimeUnit.DAYS) + " DAYS\n" +
